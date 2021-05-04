@@ -3,6 +3,9 @@ fkik.py
 sr_suite_utilities
 """
 
+import coord_math as m
+
+
 import pymel.core as pm
 
 # SSC default bone names
@@ -77,4 +80,40 @@ def ik_to_fk(side=None, fk_bones_dict = internal_def_fk_jnts,
     ik_ctrls_dict - dictionary containing keys 'shoulder' and 'elbow' etc, listing ik controls.
     """
 
-    pass
+    # Append the side flags
+    if(side == None):      
+        pm.error("Specify a side flag (Example fk_to_ik(side='l') )")
+        return
+
+    if(side.upper() in ['L', 'LEFT', 'L_', 'LFT', 'LT']):
+        side_token = internal_side_tokens['left']
+    elif(side.upper() in ['R', 'RIGHT', 'R_', 'RGT', 'RT']):
+        side_token = internal_side_tokens['right']
+    else:
+        pm.error("Given side-flag string was weird.  Try 'r' or 'l'.")
+        return
+
+    # Append the side token to all strings.
+    for bone in fk_bones_dict:
+        fk_bones_dict[bone] = (side_token + fk_bones_dict[bone])
+    print ("Side tokens added, joint references are:\n {}".format(fk_bones_dict))
+    for ctrl in ik_ctrls_dict:
+        ik_ctrls_dict[ctrl] = (side_token + ik_ctrls_dict[ctrl])
+    print ("Side tokens added, ctrl targets are:\n {}".format(ik_ctrls_dict))
+
+    # Step one, match ik shoulder 1:1
+    shoulder_target = pm.PyNode(fk_bones_dict['shoulder'])
+    shoulder_ctrl = pm.PyNode(ik_ctrls_dict['shoulder'])
+    pm.matchTransform(shoulder_ctrl, shoulder_target, pos=True, piv=True)
+
+    # Step two, match ik wrist 1:1
+    wrist_target = pm.Pynode(fk_bones_dict['wrist'])
+    wrist_ctrl = pm.PyNode(ik_ctrls_dict['wrist'])
+    pm.matchTransform(wrist_ctrl, wrist_target, pos=True, piv=True)
+
+    # Step three-- triangulate the plane on which the pole vector should go.
+    normal = m.
+
+
+    
+
