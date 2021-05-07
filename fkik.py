@@ -1,7 +1,6 @@
-"""
-fkik.py
-sr_suite_utilities
-"""
+# fkik.py
+# Matt Riche 2021
+# sr_suite_utilities for kinematic solver related operations.
 
 import coord_math as m
 
@@ -112,7 +111,7 @@ def ik_to_fk(side=None, fk_bones_dict = internal_def_fk_jnts,
     pm.matchTransform(wrist_ctrl, wrist_target, pos=True, piv=True)
 
     # Step three-- triangulate the plane on which the pole vector should go.
-    normal = m.
+    normal = m.get_normal()
 
 
     

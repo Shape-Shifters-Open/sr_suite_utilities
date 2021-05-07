@@ -1,10 +1,37 @@
-"""
-math.py
-Some of the custom math utilities that the other tools lean on.
-"""
+# coord_math.py
+# Matt Riche 2021
+# some 3D math custom formulas to help sr_suite_utilities
+
 
 import pymel.core as pm
 import numpy as np
+
+
+def get_average_xform(nodes):
+    '''
+    Given a selection of components or trans nodes, find the average positon in world space.
+
+    usage:
+    get_average_xform(nodes)
+    nodes - list of string node names or PyNodes.
+    '''
+    
+    x_vals = []
+    y_vals = []
+    z_vals = []
+    # Find the average transform of all nodes selected
+    for node in nodes:
+        node_xform = pm.xform(node, q=True, t=True, a=True)
+        print (node_xform)
+        x_vals.append(node_xform[0])
+        y_vals.append(node_xform[1])
+        z_vals.append(node_xform[2])
+
+    average_pos = [np.average(x_vals), np.average(y_vals), np.average(z_vals)]
+
+    print
+
+    return average_pos
 
 
 def get_normal(point_a, point_b, point_c):
