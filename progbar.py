@@ -23,7 +23,8 @@ def start_progbar(max_value, message="Please Wait."):
                     beginProgress=True,
                     isInterruptable=True,
                     status=message,
-                    maxValue=max_value
+                    maxValue=max_value,
+                    minValue=0
                     )
 
     return
