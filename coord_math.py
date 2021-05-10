@@ -78,6 +78,8 @@ def get_unit_vector(vector):
     usage:
     get_unit_vector(point_a=[lists], point_b=[lists])
     '''
+    point_a = vector[0]
+    point_b = vector[1]
     # Calculate magnitude
     magnitude = np.sqrt(point_a[0]**2 + point_a[1]**2 + point_a[2]**2)
 
@@ -87,3 +89,26 @@ def get_unit_vector(vector):
     return normalized_mag
     
 
+def match_xform(target_node, subject_node, rotate=True):
+    '''
+    match_xform
+    Matches the transform of one object to another.
+    Performs the same as Maya's internal match without the weird matrix bugs.
+
+    usage:
+    match_xform(target_node=[string or PyNode], subject_node=[string or PyNode], rotate=[boolean])
+    '''
+
+	# Get details from the target_node.
+	targetRotOrder = pm.getAttr(target_node.rotateOrder)
+	targetRot = pm.xform( target_node, q=True, ws=True, ro=True )
+	targetTrans = pm.xform( target_node, q=True, ws=True, t=True )
+	targetRotPivot = pm.xform( target_node, q=True, ws=True, rp=True )
+
+	# I've been warned about the ws flags behaving deceptively.
+	pm.xform( subject_node, ws=True, t=targetTrans )
+
+	if(rotate):
+		pm.xform( subject_node, ws=True, ro=targetRot )
+
+    return

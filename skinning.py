@@ -4,6 +4,8 @@
 
 import pymel.core as pm
 import progbar as pb
+import maya.mel as mel
+
 
 def copy_skinweights(source="", target=""):
     '''
@@ -111,3 +113,37 @@ def select_bound_joints(node=None):
     pm.select(joints)
 
     return joints
+
+
+def harden():
+    '''
+    harden
+    With a single component of a skinned mesh selected, copy the identical skinweights through out
+    the entire "shell" until an edge it met.  (Good for scales or solid blocks.)
+    
+    usage:
+    harden() # With single vert selected.
+    '''
+               
+    selectionSize = pm.ls( sl=True )
+    lastSelectionSize = []
+    
+    # Copy skinweight into buffer.
+    mel.eval("artAttrSkinWeightCopy;")
+    # Note: This mel based command is fast and cheap, but ideally we'd use skinPercent to be non
+    # mel dependant, but that would be slower for no reason.
+    
+    print ("Getting selection...")
+    # Grow selection select entire shell.
+    while lastSelectionSize != selectionSize:
+        # Get current selection size.
+        lastSelectionSize = selectionSize
+        mel.eval("GrowPolygonSelectionRegion;")
+        # Once again, the mel command here is fast and cheap.  The actual Python may be worse.
+        # Shamelessly going to remain mel dependant on this one.
+        selectionSize = pm.ls( sl=True )
+            
+    mel.eval("artAttrSkinWeightPaste;")    
+    print ("Weights spread to {} vertices.".format(len(selectionSize)))
+
+    return
