@@ -3,8 +3,6 @@
 # sr_suite_utilities for kinematic solver related operations.
 
 import coord_math as m
-
-
 import pymel.core as pm
 
 # SSC default bone names
@@ -112,7 +110,3 @@ def ik_to_fk(side=None, fk_bones_dict = internal_def_fk_jnts,
 
     # Step three-- triangulate the plane on which the pole vector should go.
     normal = m.get_normal()
-
-
-    
-

@@ -4,7 +4,6 @@
 
 import pymel.core as pm
 import dict_lib as dl
-import swift_utils as ut
 
 offset_string = "_Offset"
 

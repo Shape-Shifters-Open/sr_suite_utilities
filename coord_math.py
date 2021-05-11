@@ -80,6 +80,7 @@ def get_unit_vector(vector):
     '''
     point_a = vector[0]
     point_b = vector[1]
+
     # Calculate magnitude
     magnitude = np.sqrt(point_a[0]**2 + point_a[1]**2 + point_a[2]**2)
 
@@ -99,16 +100,16 @@ def match_xform(target_node, subject_node, rotate=True):
     match_xform(target_node=[string or PyNode], subject_node=[string or PyNode], rotate=[boolean])
     '''
 
-	# Get details from the target_node.
-	targetRotOrder = pm.getAttr(target_node.rotateOrder)
-	targetRot = pm.xform( target_node, q=True, ws=True, ro=True )
-	targetTrans = pm.xform( target_node, q=True, ws=True, t=True )
-	targetRotPivot = pm.xform( target_node, q=True, ws=True, rp=True )
+    # Get details from the target_node.
+    #targetRotOrder = pm.getAttr(target_node.rotateOrder)
+    target_rot = pm.xform( target_node, q=True, ws=True, ro=True )
+    target_trans = pm.xform( target_node, q=True, ws=True, t=True )
+    #targetRotPivot = pm.xform( target_node, q=True, ws=True, rp=True )
 
-	# I've been warned about the ws flags behaving deceptively.
-	pm.xform( subject_node, ws=True, t=targetTrans )
+    # I've been warned about the ws flags behaving deceptively.
+    pm.xform( subject_node, ws=True, t=target_trans )
 
-	if(rotate):
-		pm.xform( subject_node, ws=True, ro=targetRot )
-
-    return
+    if(rotate):
+        pm.xform( subject_node, ws=True, ro=target_rot )
+    
+    return 

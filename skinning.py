@@ -125,8 +125,8 @@ def harden():
     harden() # With single vert selected.
     '''
                
-    selectionSize = pm.ls( sl=True )
-    lastSelectionSize = []
+    selection_size = pm.ls( sl=True )
+    last_selection_size = []
     
     # Copy skinweight into buffer.
     mel.eval("artAttrSkinWeightCopy;")
@@ -135,15 +135,70 @@ def harden():
     
     print ("Getting selection...")
     # Grow selection select entire shell.
-    while lastSelectionSize != selectionSize:
+    while last_selection_size != selection_size:
         # Get current selection size.
-        lastSelectionSize = selectionSize
+        last_selection_size = selection_size
         mel.eval("GrowPolygonSelectionRegion;")
         # Once again, the mel command here is fast and cheap.  The actual Python may be worse.
         # Shamelessly going to remain mel dependant on this one.
-        selectionSize = pm.ls( sl=True )
+        selection_size = pm.ls( sl=True )
             
-    mel.eval("artAttrSkinWeightPaste;")    
-    print ("Weights spread to {} vertices.".format(len(selectionSize)))
+    mel.eval("artAttrSkinWeightPaste;")
+    print ("Weights spread to {} vertices.".format(len(selection_size)))
 
     return
+
+
+def transfer_skin():
+    '''
+    transfer_skin()
+    Copies influences from one selected geo to another.  Finds all influencing joints and binds them
+    to the second selection.  After that, a copySkinWeights is automatically performed.
+    '''
+
+    selection = pm.ls(sl=True)
+    source = selection[0]
+    target = selection[-1]
+    type = pm.listRelatives(source, children=True)
+
+    print ("Selected node type was {}.".format(type))
+    if (pm.nodeType(type[0]) == 'mesh'):
+        pm.select(source)
+        joints = select_bound_joints()
+        
+        pm.select(joints, target)
+        pm.skinCluster(toSelectedBones=True, mi=8)
+        
+        pm.select(source, target) 
+        try:
+            pm.copySkinWeights(
+                surfaceAssociation='closestPoint', influenceAssociation='oneToOne', noMirror=True
+                )
+        except:
+            print ("copySkinWeights operation failed.  Maybe it already has a cluster.")
+
+    else:
+        pm.warning("Type of selection must include 'mesh' for this command.")
+
+    return
+
+
+def save_skin():
+    '''
+    save_skin
+    Saves skin weights as a dict that's influences-per-vertex, which is then exported to .json.
+
+    usage:
+    save_skin() # With skinned geo selected.
+    '''
+
+    # Acquire selection
+    mesh = pm.ls(sl=True)[0]
+
+    joints = select_bound_joints(node=mesh)
+
+    pm.error("NOT IMPLEMENTED!")
+
+    for joint in joints:
+        # Get the skinPercent per vert, per joint.
+        pass
