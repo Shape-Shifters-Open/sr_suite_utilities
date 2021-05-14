@@ -60,7 +60,7 @@ def create_offset(suffix=offset_string):
         # Arrange desired hierarachy (Node beneath new transform, new transform beneath old parent.)
         parent = pm.listRelatives(node, parent=True)
         pm.parent(node, group, a=True)
-        if(parent != None):
+        if(parent != []):
             pm.parent(group, parent[0], a=True)
 
     return offsets_list

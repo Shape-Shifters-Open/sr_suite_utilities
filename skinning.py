@@ -34,7 +34,7 @@ def copy_skinweights(source="", target=""):
 
     # Find joints and skinCluster node:
     sourceSkin = find_related_skinCluster(source)
-    joints = pm.listConnections((sourceSkin + ".matrix"), d=False, s=True)
+    joints = select_bound_joints(source)
 
     # Start a progress bar
     pb.start_progbar(
@@ -48,7 +48,7 @@ def copy_skinweights(source="", target=""):
         print ("Copying skin influences to {}".format(geo))
         
         try:
-            pm.skinCluster(geo.name(), joints, omi=True, tsb=False)
+            pm.skinCluster(geo.name(), joints, omi=True, tsb=True)
         except:
             print ("{} already has a skinCluster on it...".format(geo.name()))
             pb.update_progbar()
@@ -145,40 +145,6 @@ def harden():
             
     mel.eval("artAttrSkinWeightPaste;")
     print ("Weights spread to {} vertices.".format(len(selection_size)))
-
-    return
-
-
-def transfer_skin():
-    '''
-    transfer_skin()
-    Copies influences from one selected geo to another.  Finds all influencing joints and binds them
-    to the second selection.  After that, a copySkinWeights is automatically performed.
-    '''
-
-    selection = pm.ls(sl=True)
-    source = selection[0]
-    target = selection[-1]
-    type = pm.listRelatives(source, children=True)
-
-    print ("Selected node type was {}.".format(type))
-    if (pm.nodeType(type[0]) == 'mesh'):
-        pm.select(source)
-        joints = select_bound_joints()
-        
-        pm.select(joints, target)
-        pm.skinCluster(toSelectedBones=True, mi=8)
-        
-        pm.select(source, target) 
-        try:
-            pm.copySkinWeights(
-                surfaceAssociation='closestPoint', influenceAssociation='oneToOne', noMirror=True
-                )
-        except:
-            print ("copySkinWeights operation failed.  Maybe it already has a cluster.")
-
-    else:
-        pm.warning("Type of selection must include 'mesh' for this command.")
 
     return
 
