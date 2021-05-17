@@ -22,6 +22,7 @@ class MainDialog(QtWidgets.QDialog):
         super(MainDialog, self).__init__(parent)
         self.setWindowTitle("Shaper Rigs Suite Utilities v{}".format(globals.srsu_version))
         self.setMinimumWidth(400)
+        self.setMinimumHeight(200)
 
         # Remove help button flag on windows wm.
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
@@ -30,15 +31,31 @@ class MainDialog(QtWidgets.QDialog):
         self.create_layouts()
         self.create_connections()
 
+        
 
     def create_widgets(self):
+        
+        # Prep tabs:
+        self.tools_tab = QtWidgets.QTabWidget(self)
+        self.tools_tab.setGeometry(QtCore.QRect(20, 20, 371, 361))
+        self.tools_tab.setAutoFillBackground(False)
 
-        # Widgets for standard tokens
-        pass
+        # Make the skeleton tab
+        self.skeleton_tab = QtWidgets.QWidget()
+        # self.tools_tab.setTabText(self.tools_tab.indexOf(self.skeleton_tab), "Skeleton")
+        self.tools_tab.addTab(self.skeleton_tab, "Skeleton")
+
+        self.skin_tab = QtWidgets.QWidget()
+        #self.tools_tab.setTabText(self.tools_tab.indexOf(self.skin_tab), "Skinning")
+        self.tools_tab.addTab(self.skin_tab, "Skinning")
+
+
+        self.tools_tab.setCurrentIndex(0)
 
 
     def create_layouts(self):
         pass
+        
 
 
     def create_connections(self):
