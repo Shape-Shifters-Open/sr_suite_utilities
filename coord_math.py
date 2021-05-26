@@ -21,7 +21,9 @@ def get_average_xform(nodes):
     z_vals = []
     # Find the average transform of all nodes selected
     for node in nodes:
-        node_xform = pm.xform(node, q=True, t=True, a=True)
+        # We have to use Matrices to not get bunk transform data. First 3 elements of the fourth 
+        # line should be the translation.  
+        node_xform = pm.xform(object, q=True, ws=True, m=True)
         print (node_xform)
         x_vals.append(node_xform[0])
         y_vals.append(node_xform[1])

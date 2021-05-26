@@ -70,7 +70,7 @@ def copy_skinweights(source="", target=""):
     return 
 
 
-def find_related_skinCluster(node):
+def find_related_skinCluster(node=None):
     '''
     find_related_skinCluster
     Finds a relative of the type "skinCluster".
@@ -79,14 +79,25 @@ def find_related_skinCluster(node):
     usage:
     find_related_skinCluster([geo's shapeNode])
     '''
+    
+    select_mode = False
 
-    print ("Checking {} connections...".format(node))
+    if(node == None):
+        select_mode = True
+        print ("Running the UI version of this command, return value will be selected.")
+        node = pm.ls(sl=True)[0]
 
+    print ("Checking {}'s connections...".format(node))
     skin_cluster = None
     for nodes in node.getShape().connections():
         if nodes.nodeType() == 'skinCluster':
+            print ("Found {}.".format(nodes))
             skin_cluster = nodes
             break
+
+
+    if(select_mode):
+        pm.select(skin_cluster)
 
     return skin_cluster
 
