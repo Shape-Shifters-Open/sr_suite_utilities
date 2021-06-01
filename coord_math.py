@@ -4,8 +4,23 @@
 
 
 import pymel.core as pm
+import maya.api.OpenMaya as om
 import numpy as np
 
+
+
+def get_component_ID(component):
+    """
+    Get selected component's ID/s using om2
+    """
+    print ("Component is {}".format(component))
+    id = component.getComponent(0)[1]
+    id_list = om.MFnSingleIndexedComponent(id)
+    id_element = id_list.getElements()
+
+    print ("Component ID was {}".format(id_element))
+    return id_element
+    
 
 def get_average_xform(nodes):
     '''
@@ -21,17 +36,23 @@ def get_average_xform(nodes):
     z_vals = []
     # Find the average transform of all nodes selected
     for node in nodes:
-        # We have to use Matrices to not get bunk transform data. First 3 elements of the fourth 
-        # line should be the translation.  
-        node_xform = pm.xform(object, q=True, ws=True, m=True)
-        print (node_xform)
-        x_vals.append(node_xform[0])
-        y_vals.append(node_xform[1])
-        z_vals.append(node_xform[2])
+
+        # Transfer the PyNodes incoming to MObjects using viewport selection (Yes I hate it too):
+        print ("Selecting {} and passing it to OM".format(node))
+        pm.select(node)
+        selection = om.MGlobal.getActiveSelectionList()
+        print (selection)
+        component_id = get_component_ID(selection)
+        meshDagPath = selection.getDagPath(0)
+        mFnMesh = om.MFnMesh(meshDagPath)
+        new_point = mFnMesh.getPoint(component_id[0], om.MSpace.kWorld)
+
+        print (new_point)
+        x_vals.append(new_point[0])
+        y_vals.append(new_point[1])
+        z_vals.append(new_point[2])
 
     average_pos = [np.average(x_vals), np.average(y_vals), np.average(z_vals)]
-
-    print
 
     return average_pos
 
@@ -115,3 +136,7 @@ def match_xform(target_node, subject_node, rotate=True):
         pm.xform( subject_node, ws=True, ro=target_rot )
     
     return 
+
+
+    
+

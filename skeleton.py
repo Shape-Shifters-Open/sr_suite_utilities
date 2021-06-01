@@ -18,6 +18,7 @@ def joint_from_components(name="_JNT"):
 
     # Use coord_math module to get average position.
     selection = pm.ls(sl=True, fl=True)
+    print ("selection is {}".format(selection))
     position = cmath.get_average_xform(selection)
     pm.select(clear=True)
     
