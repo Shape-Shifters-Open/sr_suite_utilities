@@ -25,3 +25,41 @@ def joint_from_components(name="_JNT"):
     joint = pm.joint(p=(position[0], position[1], position[2]), n=name)
 
     return joint
+
+
+def duplicate_skeleton(prefix="", joints_list=[]):
+    '''
+    duplicate_skeleton(prefix)
+    Rebuilds a skeleton exactly like the hiearchy attached to base_joint.  This helps the "Rip Skin"
+    feature work.
+
+    usage:
+    duplicate_skeleton(prefix=[string], base_joint=[PyNode Joint])
+
+    return value:
+    List of newly duplicated root joints.
+    '''
+
+    # First we have to take the full joints list, and chase it to the top-most joint.
+    root_joints = []
+    for joint in joints_list:
+        # Check each joint for a lack of parents that are also joints, then collect them in roots.
+        parents = pm.listRelatives(joint, ap=True)
+        has_joint_parent = False
+        for parent in parents:
+            if(parent.type() == 'joint'):
+                has_joint_parent = True
+        
+        if(has_joint_parent == False):
+            print ("Appending {} to the list of root joints to duplicate.".format(joint))
+            root_joints.append(joint)
+
+    # Duplicate the discovered roots, and make them a child of world.
+    new_roots = []
+    for joint in root_joints:
+        new_root = pm.duplicate(joint, un=True)
+        pm.parent(new_root, w=True)
+        new_roots.append(new_root)
+
+    return new_roots
+
