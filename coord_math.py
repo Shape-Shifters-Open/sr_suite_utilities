@@ -52,9 +52,11 @@ def get_average_xform(nodes):
         y_vals.append(new_point[1])
         z_vals.append(new_point[2])
 
-    average_pos = [np.average(x_vals), np.average(y_vals), np.average(z_vals)]
+    x_avg = sum(x_vals) / len(x_vals)
+    y_avg = sum(y_vals) / len(y_vals)
+    z_avg = sum(z_vals) / len(z_vals)
 
-    return average_pos
+    return [x_avg, y_avg, z_avg]
 
 
 def get_normal(point_a, point_b, point_c):

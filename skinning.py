@@ -141,9 +141,13 @@ def harden():
     last_selection_size = []
     
     # Copy skinweight into buffer.
-    mel.eval("artAttrSkinWeightCopy;")
-    # Note: This mel based command is fast and cheap, but ideally we'd use skinPercent to be non
-    # mel dependant, but that would be slower for no reason.
+    try:
+        mel.eval("artAttrSkinWeightCopy;")
+        # Note: This mel based command is fast and cheap, but ideally we'd use skinPercent to be non
+        # mel dependant, but that would be slower for no reason.
+    except:
+        pm.warning("Couldn't copy skin-weight.  You probably don't have a vertex selected.")
+        return
     
     print ("Getting selection...")
     # Grow selection select entire shell.
@@ -199,18 +203,24 @@ def rip_skin(source_mesh=None, target_mesh=None):
         source_mesh = pm.ls(sl=True)[0]
         target_mesh = pm.ls(sl=True)[1]
 
-    
     # Get the skincluster and list of influences on the source mesh
     old_skinCluster = find_related_skinCluster(node=source_mesh)
     old_joints = select_bound_joints(node=source_mesh)
 
-    # Duplicate the joints
-    new_joints = sk.duplicate_skeleton(old_joints)
+    # Get the skincluster and the list of influences on the new mesh
+    new_skinCluster = find_related_skinCluster(node=target_mesh)
+    new_joints = select_bound_joints(node=target_mesh)
 
-    # Copy the skin influence over.  To achieve this, we first copy skinWeights from old to new with
-    # the same influences.  Once influences are in play, we do a per-joint operation to copy weight
-    # from old influences to new influences.
+    # Make a list of just the joint names for comparision
+    old_names=[]
+    for joint in old_joints:
+        old_names.append(joint.name())
+    missing_infs = old_joints
 
-    # Step one is copy weights from source mesh to target mesh with no new influences:
-
-
+    # Now make warnings about what is or isn't matching in the lists.
+    for joint in new_joints:
+        if(joint.name() in old_names):
+            missing_infs.remove(joint.name())
+            
+    # Now new_joint and old_joints should have contents with the same names... let's check how much
+    # they do or do not match.

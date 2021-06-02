@@ -27,7 +27,7 @@ def joint_from_components(name="_JNT"):
     return joint
 
 
-def duplicate_skeleton(prefix="", joints_list=[]):
+def duplicate_skeleton(prefix="ripped_", joints_list=[]):
     '''
     duplicate_skeleton(prefix)
     Rebuilds a skeleton exactly like the hiearchy attached to base_joint.  This helps the "Rip Skin"
@@ -57,8 +57,13 @@ def duplicate_skeleton(prefix="", joints_list=[]):
     # Duplicate the discovered roots, and make them a child of world.
     new_roots = []
     for joint in root_joints:
-        new_root = pm.duplicate(joint, un=True)
+        # Keep the name of the old joint
+        name = (prefix + joint.name())
+        print ("New name should be {}".format(name))
+        new_root = pm.duplicate(joint, un=True)[0]
         pm.parent(new_root, w=True)
+        new_root.rename(name)
+        print ("New name is {}".format(new_root.name()))
         new_roots.append(new_root)
 
     return new_roots
