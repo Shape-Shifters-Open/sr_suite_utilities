@@ -5,8 +5,6 @@
 
 import pymel.core as pm
 import maya.api.OpenMaya as om
-import numpy as np
-
 
 
 def get_component_ID(component):

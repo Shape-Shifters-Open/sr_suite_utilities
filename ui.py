@@ -2,7 +2,6 @@
 # Matt Riche 2021
 # Shaper Rigs in-suite UI.
 
-
 import maya.OpenMayaUI as omui
 import pymel.core as pm
 # Trust all the following to ship with Maya.
@@ -14,8 +13,6 @@ import skeleton
 import skinning
 import handles
 import connections
-
-
 
 
 def maya_main_window():
