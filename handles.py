@@ -34,6 +34,10 @@ class CounterTransHandle:
 		self.control_curve.translate >> self.mult_div.input1
 
 
+
+def fake_def():
+	pass
+
 def create_offset(suffix=offset_string):
     '''
     Creates an offset group above the selection.
