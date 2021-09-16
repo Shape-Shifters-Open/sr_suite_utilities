@@ -9,9 +9,9 @@ import maya.api.OpenMaya as om
 
 
 def get_component_ID(component):
-    """
+    '''
     Get selected component's ID/s using om2
-    """
+    '''
     print ("Component is {}".format(component))
     id = component.getComponent(0)[1]
     id_list = om.MFnSingleIndexedComponent(id)
@@ -23,8 +23,9 @@ def get_component_ID(component):
 
 def get_point_at_range(source_point, point):
     '''
-    Given a point 
+    Not well documented what this was for...
     '''
+    pass
     
 
 def get_average_xform(nodes):
