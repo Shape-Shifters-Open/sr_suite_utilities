@@ -23,57 +23,53 @@ def swap_axis(subject, swap_map, orient_joint=False):
 
     fresh_matrix = dt.Matrix()
 
-    s_x_rot = dt.Vector(s_matrix[0][:3])
-    s_y_rot = dt.Vector(s_matrix[1][:3])
-    s_z_rot = dt.Vector(s_matrix[2][:3])
+    s_x_vec = dt.Vector(s_matrix[0][:3])
+    s_y_vec = dt.Vector(s_matrix[1][:3])
+    s_z_vec = dt.Vector(s_matrix[2][:3])
 
     # Vector replacements case by case.
     if(swap_map[0] == 'x'):
-        m0 = list(s_x_rot.get())
+        t_x_vec = s_x_vec
     elif(swap_map[0] == '-x'):
-        m0 = list(-s_x_rot.get())
+        t_x_vec = -s_x_vec
     elif(swap_map[0] == 'y'):
-        m0 = list(s_y_rot.get())
+        t_x_vec = s_y_vec
     elif(swap_map[0] == '-y'):
-        m0 = list(-s_y_rot.get())
+        t_x_vec = -s_y_vec
     elif(swap_map[0] == 'z'):
-        m0 = list(s_z_rot.get())
+        t_x_vec = s_z_vec
     elif(swap_map[0] == '-z'):
-        m0 = list(-s_z_rot.get())
+        t_x_vec = -s_z_vec
     else:
         pm.error("Bad X input string for new-axis mapping")
 
     if(swap_map[1] == 'x'):
-        m1 = list(s_x_rot.get())
+        t_y_vec = s_x_vec
     elif(swap_map[1] == '-x'):
-        m1 = list(-s_x_rot.get())
+        t_y_vec = -s_x_vec
     elif(swap_map[1] == 'y'):
-        m1 = list(s_y_rot.get())
+        t_y_vec = s_y_vec
     elif(swap_map[1] == '-y'):
-        m1 = list(-s_y_rot.get())
+        t_y_vec = -s_y_vec
     elif(swap_map[1] == 'z'):
-        m1 = list(s_z_rot.get())
+        t_y_vec = s_z_vec
     elif(swap_map[1] == '-z'):
-        m1 = list(-s_z_rot.get())
+        t_y_vec = -s_z_vec
     else:
         pm.error("Bad Y input string for new-axis mapping")
 
-    if(swap_map[2] == 'x'):
-        m2 = list(s_x_rot.get())
-    elif(swap_map[2] == '-x'):
-        m2 = list(-s_x_rot.get())
-    elif(swap_map[2] == 'y'):
-        m2 = list(s_y_rot.get())
-    elif(swap_map[2] == '-y'):
-        m2 = list(-s_y_rot.get())
-    elif(swap_map[2] == 'z'):
-        m2 = list(s_z_rot.get())
-    elif(swap_map[2] == '-z'):
-        m2 = list(-s_z_rot.get())
-    else:
-        pm.error("Bad Z input string for new-axis mapping")
+    # We used to use the third axis, but I think to avoid weird bad scales, we will get the cross
+    # product instead.
+    t_z_vec = t_x_vec.cross(t_y_vec)
+    t_x_vec.normalize()
+    t_y_vec.normalize()
+    t_z_vec.normalize()
 
-    # Reconstruct the translate values:
+    # Reconstruct the matrix values:
+    m0 = list(t_x_vec.get())
+    m1 = list(t_y_vec.get())
+    m2 = list(t_z_vec.get())
+
     m3 = list(s_translate.get())
     m3.append(1.0)
 
