@@ -104,30 +104,35 @@ def find_down_axis(joint_node, child_name=None):
             [child for child in pm.listRelatives(joint_node, c=True) 
             if(child.type() in ['transform', 'joint'])]
             )
-        print("Full child list of {} is {}".format(joint_node, child_list))
 
-        # This process can't work on a multi-child branching joint.  Return a special string to
-        # indicate this.
+        print("DEBUG: Aiming at {}".format(child_list[0]))
+        # This process can't ever pick a "favored" child joint if there's more than one-- I've 
+        # chosen to complete crash this process
         if(len(child_list) > 1):
-            return ["MULTI_CHILD", "MULTI_CHILD"] 
-            # I am not thrilled with this scheme for returning joints we should skip.  TODO: make a
-            # Github issue to fix later.
+            pm.error("find_down_axis() won't work on multi-child joints.  {} has {} child joints."
+            .format(joint_node.name(), len(child_list)))
+            return
+
         elif(len(child_list) < 1):
-            return ["ROOT", "ROOT"]
+            return None
         else:
             child = child_list[0]
     else:
         child = pm.PyNode(child_name)
 
     # Find the vector between the joint and the child.
+    print("Getting the vector aimed down at the child...")
     joint_ws = dt.Vector(pm.xform(joint_node, q=True, ws=True, t=True))
     child_ws = dt.Vector(pm.xform(child, q=True, ws=True, t=True))
     down_vec = child_ws - joint_ws
     down_vec.normalize()
 
+    print("WE have the downvec, it's {}".format(down_vec))
+
     # Now that we have the vector pointing to the next joint, which find which part of the matrix
     # has the closest angle to it
     joint_matrix = joint_node.getMatrix()
+    print("We got the matrix, it's {}".format(joint_matrix))
     # Take apart the matrix into vectors for each axis
     x_axis = joint_matrix[0][:3]
     y_axis = joint_matrix[1][:3]
@@ -137,8 +142,16 @@ def find_down_axis(joint_node, child_name=None):
     # be from the intended "down axis"
     angle_list = []
     for axis_vec in [x_axis, y_axis, z_axis]:
-        
-        angle_list.append(down_vec.angle(axis_vec))
+        print("comparing:\n{}\n{}".format(down_vec, axis_vec))
+        if(down_vec.get() != axis_vec.get()):
+            print("Not equal enough")
+            angle_list.append(down_vec.angle(axis_vec))
+            print("Appended anyways")
+        else:
+            print("They were equal")
+            angle_list.append(0.0)
+
+    print("We got the angle list...")
     # Get an int 0,1,2 for x,y,z
     smallest_angle = min(angle_list)
     axis_index = angle_list.index(smallest_angle)
@@ -149,15 +162,19 @@ def find_down_axis(joint_node, child_name=None):
     return (axis_strings[axis_index], down_vec)
 
 
-def compare_axis_vector(target_joint, source_joint, exclude_axis=None):
+def closest_axis(target_joint, source_joint, exclude_axis=None):
     '''
-    Find which axis have similarly parallel alignment between bones, in order to use the
-    this relationship to determine the alignment later.
+    Find which two axis between two joints have similarly parallel alignment between bones, 
+    in order to use this relationship to determine the alignment later.
 
     usage:
-    - target_joint: pynode of the joint we are snapping to.
+    closest_axis(target_joint, source_joint, exclude_axis=(string))
+    - target_joint: (pynode) of the joint we are snapping to.
     - source_joint: pynode of the joint we are aligning by.
     - excluse_axis: Char value of the previously determined "down axis" that doesn't need checking.
+
+    returns:
+    (tuple) (closest matching source axis, closest matching target axis, closest target's vector)
     '''
 
     target_matrix = target_joint.getMatrix()
@@ -180,35 +197,27 @@ def compare_axis_vector(target_joint, source_joint, exclude_axis=None):
         target_x_axis, target_y_axis, target_z_axis]
 
     axis = ['x', 'y', 'z', '-x', '-y', '-z']
-    if(exclude_axis in axis):
-        print(source_vectors)
-        print("exclusing axis {}".format(axis[axis.index(exclude_axis)]))
-        source_vectors[axis.index(exclude_axis)] = None
-        print(source_vectors)
 
+    # Get the "exclude_axis" flag's demands sorted-- a 'None' gets skipped later.
+    if(exclude_axis != None):
+        if(exclude_axis in axis):
+            source_vectors[axis.index(exclude_axis)] = None
+        else:
+            pm.error("Bad string given to 'exlude_axis' flag.  Must be ['x','y','z','-x','-y','-z']")
 
     smallest_angle = 360.1
     for s_vector in source_vectors:
-        print (type(s_vector))
+        # Check if this axis has been excluded and continue in that case
         if s_vector is None:
-            print("Axis exclused.")
             continue
         for t_vector in target_vectors:
-            print(
-                "comparing {} to {}".format(axis[target_vectors.index(t_vector)], 
-                axis[source_vectors.index(s_vector)])
-                )
-            print("    angle is {}".format(s_vector.angle(t_vector)))
             if(s_vector.angle(t_vector) < smallest_angle):
                 smallest_angle = s_vector.angle(t_vector)
                 t_match_axis = axis[target_vectors.index(t_vector)]
                 s_match_axis = axis[source_vectors.index(s_vector)]
                 t_match_vec = s_vector
-                print("     new smallest angle is {}".format(smallest_angle))
 
-    print("Best matched axis is source's {} to target's {}".format(s_match_axis, t_match_axis))
-
-    return (s_match_axis, t_match_vec)
+    return (s_match_axis, t_match_axis, t_match_vec)
 
 
 def aim_at(node, target=None, vec=None, pole_vec=(0,1,0), axis=0, pole=1):
@@ -339,8 +348,8 @@ def trans_align(orient, orient_like, source_child=None):
     changing the finer details of it's orientation-- essentially, keep the orientation but swap 
     the chosen axis used in the orientation.
 
-    This is a long process-- see find_down_axis and compare_axis_vector.  The process essentially
-    identifies the "down axis" as something to aim at, and the compare_axis_vector decides on the 
+    This is a long process-- see find_down_axis and closest_axis.  The process essentially
+    identifies the "down axis" as something to aim at, and the closest_axis decides on the 
     pole axis, and a matrix-edit orients it using those two axis with old vectors given new matrix
     positions.
 
@@ -374,7 +383,7 @@ def trans_align(orient, orient_like, source_child=None):
 
     print("Working out a pole vector by choosing near-match axis...")
     # Find "next best" axis to use as a pole
-    source_match_axis, target_match_vec = compare_axis_vector(
+    source_match_axis, target_match_vec = closest_axis(
         orient, orient_like, exclude_axis=source_down_axis[0]
         )
 
