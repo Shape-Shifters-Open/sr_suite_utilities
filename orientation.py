@@ -7,11 +7,45 @@ module for altering the orientation of bones based on mapping swaps.
 import pymel.core as pm
 import pymel.core.datatypes as dt
 
-def swap_axis(subject, swap_map, orient_joint=False):
+def swap_axis(subject, aim_swap, up_swap, orient_joint=False):
     '''
     Given the target axis that represents the new way it should be oriented, shuffled the contents 
     of the matrix
     '''
+
+    # Swap relationships come in as tuples-- the second index being the axis to be replaced, and the 
+    # first being the axis to replace it with.  We assign the xfor, yfor, zfor vars we use later
+    # based on these tuples.
+    xfor = yfor = zfor = None
+    if(aim_swap[1] == 'x'):
+        xfor = aim_swap[0]
+    elif(aim_swap[1] == 'y'):
+        yfor = aim_swap[0]
+    elif(aim_swap[1] == 'z'):
+        zfor = aim_swap[0]
+
+    if(up_swap[1] == 'x'):
+        xfor = up_swap[0]
+    if(up_swap[1] == 'y'):
+        yfor = up_swap[0]
+    if(up_swap[1] == 'z'):
+        zfor = up_swap[0]
+
+    # After the shuffling has been done from the tuples to the 'fors', we can sanitize we got enough
+    # axis specified.  Without enough swaps to derive a full 4x4 matrix, we throw an error.
+    axis_count = 0
+    if(xfor != None):
+        axis_count += 1
+    if(yfor != None):
+        axis_count += 1
+    if(zfor != None):
+        axis_count += 1
+
+    if(axis_count < 2):
+        pm.error(
+            "Not enough swap axis were specified.  Use at least two of xfor, yfor, zfor arguments"
+            )
+        return
 
     # If the node is a joint, begin the process by moving joint orientation to eular rotations
     if(orient_joint):
@@ -23,47 +57,93 @@ def swap_axis(subject, swap_map, orient_joint=False):
 
     fresh_matrix = dt.Matrix()
 
+    # Populate the source vectors with the contents of the source matrix.
     s_x_vec = dt.Vector(s_matrix[0][:3])
     s_y_vec = dt.Vector(s_matrix[1][:3])
     s_z_vec = dt.Vector(s_matrix[2][:3])
 
-    # Vector replacements case by case.
-    if(swap_map[0] == 'x'):
-        t_x_vec = s_x_vec
-    elif(swap_map[0] == '-x'):
-        t_x_vec = -s_x_vec
-    elif(swap_map[0] == 'y'):
+    # Initialize the target vectors as None, so that we can discover which one should be a cross
+    # product on account of being left out by the "x/y/zfor" flags.
+    t_x_vec = None
+    t_y_vec = None
+    t_z_vec = None
+
+    # Vector replacements, case by case.
+    if(xfor == None):
+        pass
+    elif(xfor == 'x'):
+        pm.error("Tried to swap x for x; xfor flag must be a different axis than x.")
+        return
+    elif(xfor == 'y'):
         t_x_vec = s_y_vec
-    elif(swap_map[0] == '-y'):
-        t_x_vec = -s_y_vec
-    elif(swap_map[0] == 'z'):
+    elif(xfor == 'z'):
         t_x_vec = s_z_vec
-    elif(swap_map[0] == '-z'):
+    elif(xfor == '-x'):
+        t_x_vec = -s_x_vec
+    elif(xfor == '-y'):
+        t_x_vec = -s_y_vec
+    elif(xfor == '-z'):
         t_x_vec = -s_z_vec
     else:
-        pm.error("Bad X input string for new-axis mapping")
+        pm.error("Bad input for xfor flag; must be a letter axis x y z, or -x,-y,-z.")
+        return
 
-    if(swap_map[1] == 'x'):
+    if(yfor == None):
+        pass
+    elif(yfor == 'x'):
         t_y_vec = s_x_vec
-    elif(swap_map[1] == '-x'):
-        t_y_vec = -s_x_vec
-    elif(swap_map[1] == 'y'):
-        t_y_vec = s_y_vec
-    elif(swap_map[1] == '-y'):
-        t_y_vec = -s_y_vec
-    elif(swap_map[1] == 'z'):
+    elif(yfor == 'y'):
+        pm.error("Tried to swap y for y, yfor flag must be a different axis than y.")
+        return
+    elif(yfor == 'z'):
         t_y_vec = s_z_vec
-    elif(swap_map[1] == '-z'):
+    elif(yfor == '-x'):
+        t_y_vec = -s_x_vec
+    elif(yfor == '-y'):
+        t_y_vec = -s_y_vec
+    elif(yfor == '-z'):
         t_y_vec = -s_z_vec
     else:
-        pm.error("Bad Y input string for new-axis mapping")
+        pm.error("Bad input for yfor flag; must be a letter axis x y z, or -x,-y,-z.")
+        return
+    
+    if(zfor == None):
+        pass
+    elif(zfor == 'x'):
+        t_z_vec = s_x_vec
+    elif(zfor == 'y'):
+        t_z_vec = s_y_vec
+    elif(zfor == 'z'):
+        pm.error("Tried to swap y for y, yfor flag must be a different axis than y.")
+        return
+    elif(zfor == '-x'):
+        t_z_vec = -s_x_vec
+    elif(zfor == '-y'):
+        t_z_vec = -s_y_vec
+    elif(zfor == '-z'):
+        t_z_vec = -s_z_vec
+    else:
+        pm.error("Bad input for zfor flag; must be a letter axis x y z, or -x,-y,-z.")
+        return
 
-    # We used to use the third axis, but I think to avoid weird bad scales, we will get the cross
-    # product instead.
-    t_z_vec = t_x_vec.cross(t_y_vec)
-    t_x_vec.normalize()
-    t_y_vec.normalize()
-    t_z_vec.normalize()
+    # Check which axis is the "None" and derive it with cross products.
+    if(t_x_vec == None):
+        t_y_vec.normalize()
+        t_z_vec.normalize()
+        t_x_vec = t_y_vec.cross(t_z_vec)
+        t_x_vec.normalize()
+
+    elif(t_y_vec == None):
+        t_x_vec.normalize()
+        t_z_vec.normalize()
+        t_y_vec = t_x_vec.cross(t_z_vec)
+        t_y_vec.normalize()
+
+    elif(t_z_vec == None):
+        t_x_vec.normalize()
+        t_y_vec.normalize()
+        t_z_vec = t_x_vec.cross(t_y_vec)
+        t_z_vec.normalize()
 
     # Reconstruct the matrix values:
     m0 = list(t_x_vec.get())
@@ -105,7 +185,6 @@ def find_down_axis(joint_node, child_name=None):
             if(child.type() in ['transform', 'joint'])]
             )
 
-        print("DEBUG: Aiming at {}".format(child_list[0]))
         # This process can't ever pick a "favored" child joint if there's more than one-- I've 
         # chosen to complete crash this process
         if(len(child_list) > 1):
@@ -121,37 +200,28 @@ def find_down_axis(joint_node, child_name=None):
         child = pm.PyNode(child_name)
 
     # Find the vector between the joint and the child.
-    print("Getting the vector aimed down at the child...")
     joint_ws = dt.Vector(pm.xform(joint_node, q=True, ws=True, t=True))
     child_ws = dt.Vector(pm.xform(child, q=True, ws=True, t=True))
     down_vec = child_ws - joint_ws
     down_vec.normalize()
 
-    print("WE have the downvec, it's {}".format(down_vec))
-
     # Now that we have the vector pointing to the next joint, which find which part of the matrix
     # has the closest angle to it
     joint_matrix = joint_node.getMatrix()
-    print("We got the matrix, it's {}".format(joint_matrix))
     # Take apart the matrix into vectors for each axis
-    x_axis = joint_matrix[0][:3]
-    y_axis = joint_matrix[1][:3]
-    z_axis = joint_matrix[2][:3]
+    x_axis = dt.Vector(joint_matrix[0][:3])
+    y_axis = dt.Vector(joint_matrix[1][:3])
+    z_axis = dt.Vector(joint_matrix[2][:3])
 
     # Collect a list of angles betwee existing axis and our "down vector".  The smallest angle will 
     # be from the intended "down axis"
     angle_list = []
     for axis_vec in [x_axis, y_axis, z_axis]:
-        print("comparing:\n{}\n{}".format(down_vec, axis_vec))
-        if(down_vec.get() != axis_vec.get()):
-            print("Not equal enough")
+        if(down_vec.normal() != axis_vec.normal()):
             angle_list.append(down_vec.angle(axis_vec))
-            print("Appended anyways")
         else:
-            print("They were equal")
             angle_list.append(0.0)
 
-    print("We got the angle list...")
     # Get an int 0,1,2 for x,y,z
     smallest_angle = min(angle_list)
     axis_index = angle_list.index(smallest_angle)
@@ -162,13 +232,13 @@ def find_down_axis(joint_node, child_name=None):
     return (axis_strings[axis_index], down_vec)
 
 
-def closest_axis(target_joint, source_joint, exclude_axis=None):
+def closest_axis(source_joint, target_joint, s_exclude_axis=None, t_exclude_axis=None):
     '''
     Find which two axis between two joints have similarly parallel alignment between bones, 
     in order to use this relationship to determine the alignment later.
 
     usage:
-    closest_axis(target_joint, source_joint, exclude_axis=(string))
+    closest_axis(target_joint, source_joint, s_exclude_axis=(string))
     - target_joint: (pynode) of the joint we are snapping to.
     - source_joint: pynode of the joint we are aligning by.
     - excluse_axis: Char value of the previously determined "down axis" that doesn't need checking.
@@ -177,8 +247,8 @@ def closest_axis(target_joint, source_joint, exclude_axis=None):
     (tuple) (closest matching source axis, closest matching target axis, closest target's vector)
     '''
 
-    target_matrix = target_joint.getMatrix()
-    source_matrix = source_joint.getMatrix()
+    target_matrix = target_joint.getMatrix(worldSpace=True)
+    source_matrix = source_joint.getMatrix(worldSpace=True)
 
     target_angles = []
 
@@ -198,12 +268,19 @@ def closest_axis(target_joint, source_joint, exclude_axis=None):
 
     axis = ['x', 'y', 'z', '-x', '-y', '-z']
 
-    # Get the "exclude_axis" flag's demands sorted-- a 'None' gets skipped later.
-    if(exclude_axis != None):
-        if(exclude_axis in axis):
-            source_vectors[axis.index(exclude_axis)] = None
+    # Get the "s_exclude_axis" flag's demands sorted-- a 'None' gets skipped later.
+    if(s_exclude_axis != None):
+        if(s_exclude_axis in axis):
+            source_vectors[axis.index(s_exclude_axis)] = None
         else:
-            pm.error("Bad string given to 'exlude_axis' flag.  Must be ['x','y','z','-x','-y','-z']")
+            pm.error("Bad string for 's_exlude_axis' flag.  Must be ['x','y','z','-x','-y','-z']")
+
+    if(t_exclude_axis != None):
+        if(t_exclude_axis in axis):
+            target_vectors[axis.index(t_exclude_axis)] = None
+        else:
+            pm.error("Bad string for 's_exlude_axis' flag.  Must be ['x','y','z']")
+
 
     smallest_angle = 360.1
     for s_vector in source_vectors:
@@ -211,6 +288,12 @@ def closest_axis(target_joint, source_joint, exclude_axis=None):
         if s_vector is None:
             continue
         for t_vector in target_vectors:
+            if(t_vector == None):
+                print("Skipping {}".format(t_vector))
+                continue
+            print("Comparing target's {} to sources' {}".
+                format(axis[target_vectors.index(t_vector)], axis[source_vectors.index(s_vector)]))
+            print("...angle was {}".format(s_vector.angle(t_vector)))
             if(s_vector.angle(t_vector) < smallest_angle):
                 smallest_angle = s_vector.angle(t_vector)
                 t_match_axis = axis[target_vectors.index(t_vector)]
@@ -384,7 +467,7 @@ def trans_align(orient, orient_like, source_child=None):
     print("Working out a pole vector by choosing near-match axis...")
     # Find "next best" axis to use as a pole
     source_match_axis, target_match_vec = closest_axis(
-        orient, orient_like, exclude_axis=source_down_axis[0]
+        orient, orient_like, s_exclude_axis=source_down_axis[0]
         )
 
     # Turn axis strings into ints:
