@@ -7,10 +7,49 @@ module for altering the orientation of bones based on mapping swaps.
 import pymel.core as pm
 import pymel.core.datatypes as dt
 
-def swap_axis(subject, aim_swap, up_swap, orient_joint=False):
+
+def smart_copy_orient(subject=None, target=None, child=None):
     '''
-    Given the target axis that represents the new way it should be oriented, shuffled the contents 
-    of the matrix
+    'smartly' copies the orientation from one joint to another, preserving the actual orientation by
+    degrees, but fully re-aligning the axial orientation.
+
+    Usage:
+    smart_copy_orient(subject=(PyNode), target=(PyNode))
+    subject - the joint upon which to paste the orientation
+    target - the joint from which to copy the orientation from    
+    '''
+
+    if(subject == None or target == None):
+        selection = pm.ls(sl=True)
+        if(len(selection) != 2):
+            pm.error("Must select exactly two joints for this operation.")
+        else:
+            subject = selection[0]
+            target = selection[1]
+
+    # The angle-discovering and comparing operations that make this possible:
+    # Step one, find the 'down' vector-- the vector that points to the child joint and record the 
+    # "swap"
+    s_down_vec = find_down_axis(subject)
+    t_down_vec = find_down_axis(target)
+    down_swap = (s_down_vec[0], t_down_vec[0])
+
+    # Step two, find the closest matching angles between the source and target, while excluding the 
+    # down angles:
+    side_swap = closest_axis(subject, target, s_exclude_axis=down_swap[0], 
+        t_exclude_axis=down_swap[1])[:2]
+
+    # Finally, knowing the swappable match facing down/aim, and the swappable match that is used as
+    # an "up vector", perform the swap by deconstructing and re-constructing the matrix:
+    swap_axis(target, aim_swap=down_swap, up_swap=side_swap, orient_joint=True)
+
+    return
+
+
+def swap_axis(subject, aim_swap, up_swap, orient_joint=False, parent_safe=True):
+    '''
+    Given the target axis that represents the new way it should be oriented, shuffle the contents 
+    of the matrix such that the alignment's axis can be switched
     '''
 
     # Swap relationships come in as tuples-- the second index being the axis to be replaced, and the 
@@ -52,7 +91,7 @@ def swap_axis(subject, aim_swap, up_swap, orient_joint=False):
         subject.rotate.set(subject.jointOrient.get())
         subject.jointOrient.set(0,0,0)
 
-    s_matrix = subject.getMatrix()  
+    s_matrix = subject.getMatrix(worldSpace=True)  
     s_translate = dt.Vector(s_matrix.translate)
 
     fresh_matrix = dt.Matrix()
@@ -150,7 +189,8 @@ def swap_axis(subject, aim_swap, up_swap, orient_joint=False):
     m1 = list(t_y_vec.get())
     m2 = list(t_z_vec.get())
 
-    m3 = list(s_translate.get())
+    m3 = pm.xform(subject, t=True, q=True, ws=True)
+    print(m3)
     m3.append(1.0)
 
     # Reconstruct the forth column:
@@ -160,6 +200,18 @@ def swap_axis(subject, aim_swap, up_swap, orient_joint=False):
     # Reconstruct the translate
     fresh_matrix = dt.Matrix(m0, m1, m2, m3)
 
+    # Since Maya's own jointOrient command is pretty weak, we will temporarily de-parent things.
+    if(parent_safe):
+        child_list = (
+            [child for child in pm.listRelatives(subject, c=True) 
+            if(child.type() in ['transform', 'joint'])]
+            )
+        if(len(child_list) > 0):
+            for child in child_list:
+                pm.parent(child, w=True)[0]
+        parent_joint = pm.listRelatives(subject, p=True)[0]
+        pm.parent(subject, w=True)
+
     # Apply the newly constructed matrix
     subject.setMatrix(fresh_matrix)
 
@@ -167,6 +219,11 @@ def swap_axis(subject, aim_swap, up_swap, orient_joint=False):
     if(orient_joint):
         subject.jointOrient.set(subject.rotate.get())
         subject.rotate.set(0, 0, 0)
+
+    if(parent_safe):
+        for child in child_list:
+            pm.parent(child, subject)
+        pm.parent(subject, parent_joint)
 
     return
 
@@ -198,6 +255,8 @@ def find_down_axis(joint_node, child_name=None):
             child = child_list[0]
     else:
         child = pm.PyNode(child_name)
+        
+    print(child.name())
 
     # Find the vector between the joint and the child.
     joint_ws = dt.Vector(pm.xform(joint_node, q=True, ws=True, t=True))
@@ -205,9 +264,11 @@ def find_down_axis(joint_node, child_name=None):
     down_vec = child_ws - joint_ws
     down_vec.normalize()
 
+    print("The downvec is {}".format(down_vec))
+
     # Now that we have the vector pointing to the next joint, which find which part of the matrix
     # has the closest angle to it
-    joint_matrix = joint_node.getMatrix()
+    joint_matrix = joint_node.getMatrix(worldSpace=True)
     # Take apart the matrix into vectors for each axis
     x_axis = dt.Vector(joint_matrix[0][:3])
     y_axis = dt.Vector(joint_matrix[1][:3])
@@ -221,7 +282,6 @@ def find_down_axis(joint_node, child_name=None):
             angle_list.append(down_vec.angle(axis_vec))
         else:
             angle_list.append(0.0)
-
     # Get an int 0,1,2 for x,y,z
     smallest_angle = min(angle_list)
     axis_index = angle_list.index(smallest_angle)
@@ -291,9 +351,6 @@ def closest_axis(source_joint, target_joint, s_exclude_axis=None, t_exclude_axis
             if(t_vector == None):
                 print("Skipping {}".format(t_vector))
                 continue
-            print("Comparing target's {} to sources' {}".
-                format(axis[target_vectors.index(t_vector)], axis[source_vectors.index(s_vector)]))
-            print("...angle was {}".format(s_vector.angle(t_vector)))
             if(s_vector.angle(t_vector) < smallest_angle):
                 smallest_angle = s_vector.angle(t_vector)
                 t_match_axis = axis[target_vectors.index(t_vector)]
@@ -345,8 +402,6 @@ def aim_at(node, target=None, vec=None, pole_vec=(0,1,0), axis=0, pole=1):
     if(target_vec == pole_vec):
         pm.error("sr_biped error: Target vector and pole vector are identical-- result will be "
             "unsafe.")
-
-    print(target_vec)
 
     # Step two, "unconstrained" vec; cross product of normalized vector and normalized pole vector 
     # is found and stored.
@@ -418,82 +473,6 @@ def aim_at(node, target=None, vec=None, pole_vec=(0,1,0), axis=0, pole=1):
     aimed_matrix = dt.Matrix(m0, m1, m2, m3)
 
     node.setMatrix(aimed_matrix)
-
-    print(aimed_matrix.formated())
-
-    return
-
-
-def trans_align(orient, orient_like, source_child=None):
-    '''
-    Given a transform node that is oriented a certain way, and a comparitive transform node that is
-    not oriented alike, take the "major axis orientation" and apply it to the first node without 
-    changing the finer details of it's orientation-- essentially, keep the orientation but swap 
-    the chosen axis used in the orientation.
-
-    This is a long process-- see find_down_axis and closest_axis.  The process essentially
-    identifies the "down axis" as something to aim at, and the closest_axis decides on the 
-    pole axis, and a matrix-edit orients it using those two axis with old vectors given new matrix
-    positions.
-
-    orient - transform node to orient
-    orient_like - transform node to emulator the axis-orientation of
-    source_child - optional string to identify the orient_like node in the case that where it should
-        aim is not presently it's child (corner case that comes from skeleton match.)   
-    '''
-
-    pm.select(clear=True)
-
-    print("Axis aligning {} to {}".format(orient, orient_like))
-
-    # Find the down vector of orient
-    target_down_vec = find_down_axis(orient)[1]
-    if(target_down_vec in ['ROOT', 'MULTI_CHILD']):
-        print("Can't orient {}, as it's {}".format(orient_like, target_down_vec))
-        return
- 
-    # Find the down axis of the source
-    if(source_child == None):
-        source_down_axis = find_down_axis(orient_like)[0]
-    else:
-        source_down_axis = find_down_axis(orient_like, source_child)
-    
-    print(
-        "'down joint' vector on our skeleton is {}, replacing with theirs; {}".format(
-            target_down_vec, source_down_axis
-            )
-        )
-
-    print("Working out a pole vector by choosing near-match axis...")
-    # Find "next best" axis to use as a pole
-    source_match_axis, target_match_vec = closest_axis(
-        orient, orient_like, s_exclude_axis=source_down_axis[0]
-        )
-
-    # Turn axis strings into ints:
-    axis = ['x', 'y', 'z']
-    print("SOURCED DOWN AXIS IS {}".format(source_down_axis[0]))
-    aim_axis = axis.index(source_down_axis[0])
-
-    if('-' in source_down_axis[0]):
-        print("This down axis is reversed.  Altering the axis string to treat it as normal now.")
-        source_down_axis[0].replace('-', '')
-
-    if('-' in source_match_axis):
-        print("This pole axis is reversed.  Altering the axis string to treat it as normal now.")
-        print(source_match_axis)
-        source_match_axis = source_match_axis.replace('-', '')
-        print(source_match_axis)
-
-    pole_axis = axis.index(source_match_axis)
-
-    # Now at this point, we have a vector to aim at and a pole, and we know which to make which.
-    try:
-        aim_at(
-            orient, vec=target_down_vec, pole_vec=target_match_vec, axis=aim_axis, pole=pole_axis
-            )
-    except:
-        print("WARNING COULDN'T AIM--- IS IT BECAUSE OF THE NEGATIVE NOT BEING EXCLUDED?")
 
     return
 
