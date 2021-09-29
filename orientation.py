@@ -32,6 +32,12 @@ def smart_copy_orient(subject=None, target=None, child=None):
     # "swap"
     s_down_vec = find_down_axis(subject)
     t_down_vec = find_down_axis(target)
+
+    if(s_down_vec == None or t_down_vec == None):
+        if(child==None):
+            pm.error("There's no child joint to derive a down vector from on one or both {} and {}"
+            .format(subject, target))
+ 
     down_swap = (s_down_vec[0], t_down_vec[0])
 
     # Step two, find the closest matching angles between the source and target, while excluding the 
@@ -153,7 +159,7 @@ def swap_axis(subject, aim_swap, up_swap, orient_joint=False, parent_safe=True):
     elif(zfor == 'y'):
         t_z_vec = s_y_vec
     elif(zfor == 'z'):
-        pm.error("Tried to swap y for y, yfor flag must be a different axis than y.")
+        pm.error("Tried to swap z for z, zfor flag must be a different axis than z.")
         return
     elif(zfor == '-x'):
         t_z_vec = -s_x_vec
@@ -167,18 +173,21 @@ def swap_axis(subject, aim_swap, up_swap, orient_joint=False, parent_safe=True):
 
     # Check which axis is the "None" and derive it with cross products.
     if(t_x_vec == None):
+        print("X vector for target in this case will be cross product.")
         t_y_vec.normalize()
         t_z_vec.normalize()
         t_x_vec = t_y_vec.cross(t_z_vec)
         t_x_vec.normalize()
 
     elif(t_y_vec == None):
+        print("Y vector for target in this case will be cross product.")
         t_x_vec.normalize()
         t_z_vec.normalize()
         t_y_vec = t_x_vec.cross(t_z_vec)
         t_y_vec.normalize()
 
     elif(t_z_vec == None):
+        print("Z vector for target in this case will be cross product.")
         t_x_vec.normalize()
         t_y_vec.normalize()
         t_z_vec = t_x_vec.cross(t_y_vec)
@@ -206,14 +215,20 @@ def swap_axis(subject, aim_swap, up_swap, orient_joint=False, parent_safe=True):
             [child for child in pm.listRelatives(subject, c=True) 
             if(child.type() in ['transform', 'joint'])]
             )
+        print("Got child list:\n{}".format(child_list))
         if(len(child_list) > 0):
             for child in child_list:
                 pm.parent(child, w=True)[0]
-        parent_joint = pm.listRelatives(subject, p=True)[0]
+        parents = pm.listRelatives(subject, p=True)
+        if(len(parents) == 1):
+            parent_joint = parents[0]
+        else:
+            parent_joint = None
         pm.parent(subject, w=True)
 
     # Apply the newly constructed matrix
-    subject.setMatrix(fresh_matrix)
+    subject.setMatrix(fresh_matrix, worldSpace=True)
+
 
     # If node is a joint, we need to apply this to the jo values.
     if(orient_joint):
@@ -223,7 +238,8 @@ def swap_axis(subject, aim_swap, up_swap, orient_joint=False, parent_safe=True):
     if(parent_safe):
         for child in child_list:
             pm.parent(child, subject)
-        pm.parent(subject, parent_joint)
+        if(parent_joint != None):
+            pm.parent(subject, parent_joint)
 
     return
 
@@ -472,7 +488,7 @@ def aim_at(node, target=None, vec=None, pole_vec=(0,1,0), axis=0, pole=1):
     # Step four, apply the values of each vector to the correct place in the matrix.
     aimed_matrix = dt.Matrix(m0, m1, m2, m3)
 
-    node.setMatrix(aimed_matrix)
+    node.setMatrix(aimed_matrix, worldSpace=True)
 
     return
 
