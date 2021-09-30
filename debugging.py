@@ -6,6 +6,7 @@ Debugging tools for other parts of the suite.
 
 import pymel.core as pm
 import pymel.core.datatypes as dt
+import colour as cl
 
 def make_vector_nurbs(vector, start_point=None):
     '''
@@ -36,6 +37,10 @@ def make_matrix_nurbs(matrix):
     x_nurbs = make_vector_nurbs(x_vec + trans, start_point=trans)
     y_nurbs = make_vector_nurbs(y_vec + trans, start_point=trans)
     z_nurbs = make_vector_nurbs(z_vec + trans, start_point=trans)
+
+    cl.change_colour(x_nurbs, colour='pink')
+    cl.change_colour(y_nurbs, colour='paleGreen')
+    cl.change_colour(z_nurbs, colour='paleBlue')
 
     return
 
