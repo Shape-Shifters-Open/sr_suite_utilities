@@ -21,7 +21,7 @@ def make_vector_nurbs(vector, start_point=None):
     return vector_line
 
 
-def make_matrix_nurbs(matrix):
+def make_matrix_nurbs(matrix, name="debug_matrix"):
     '''
     Show what a matrix 'should look like' with one-degree debug curves.
     '''
@@ -41,6 +41,8 @@ def make_matrix_nurbs(matrix):
     cl.change_colour(x_nurbs, colour='pink')
     cl.change_colour(y_nurbs, colour='paleGreen')
     cl.change_colour(z_nurbs, colour='paleBlue')
+
+    pm.group(x_nurbs, y_nurbs, z_nurbs, n=name)
 
     return
 

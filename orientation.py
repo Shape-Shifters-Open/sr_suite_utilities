@@ -229,17 +229,17 @@ def swap_axis(subject, aim_swap, up_swap, orient_joint=False, parent_safe=True):
     # Apply the newly constructed matrix
     subject.setMatrix(fresh_matrix, worldSpace=True)
 
-
-    # If node is a joint, we need to apply this to the jo values.
-    if(orient_joint):
-        subject.jointOrient.set(subject.rotate.get())
-        subject.rotate.set(0, 0, 0)
-
     if(parent_safe):
         for child in child_list:
             pm.parent(child, subject)
         if(parent_joint != None):
             pm.parent(subject, parent_joint)
+
+    # If node is a joint, we need to apply this to the jo values.
+    if(orient_joint):
+
+        subject.jointOrient.set(subject.rotate.get())
+        subject.rotate.set(0, 0, 0)
 
     return
 
