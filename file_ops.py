@@ -26,7 +26,7 @@ def json_out(data, filepath):
             json.dump(data, fp, sort_keys=True, indent=4)
             print("Wrote {}".format(filepath))
     except:
-        print("File related error writng {}.\n  Check that path has write permissions or drive is "
+        print("File related error writing {}.\n  Check that path has write permissions or drive is "
             "not full.".format(filepath))
         return False
 
@@ -54,7 +54,7 @@ def json_in(filepath):
     return data
 
 
-def prompt_for_filepath(fm, ext='*.json', caption='Specify filepath'):
+def prompt_for_filepath(fmode, ext='JSON files (*.json)', caption='Specify filepath'):
     '''
     Acquire a filepath by prompting the user with Maya's regular filepath dialog.
 
@@ -67,7 +67,7 @@ def prompt_for_filepath(fm, ext='*.json', caption='Specify filepath'):
     
     filepath = pm.fileDialog2(
         ff=ext,
-        fm=0, 
+        fm=fmode, 
         dialogStyle=2,
         cap=caption,
         )[0]

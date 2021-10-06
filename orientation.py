@@ -199,7 +199,6 @@ def swap_axis(subject, aim_swap, up_swap, orient_joint=False, parent_safe=True):
     m2 = list(t_z_vec.get())
 
     m3 = pm.xform(subject, t=True, q=True, ws=True)
-    print(m3)
     m3.append(1.0)
 
     # Reconstruct the forth column:
@@ -271,16 +270,12 @@ def find_down_axis(joint_node, child_name=None):
             child = child_list[0]
     else:
         child = pm.PyNode(child_name)
-        
-    print(child.name())
 
     # Find the vector between the joint and the child.
     joint_ws = dt.Vector(pm.xform(joint_node, q=True, ws=True, t=True))
     child_ws = dt.Vector(pm.xform(child, q=True, ws=True, t=True))
     down_vec = child_ws - joint_ws
     down_vec.normalize()
-
-    print("The downvec is {}".format(down_vec))
 
     # Now that we have the vector pointing to the next joint, which find which part of the matrix
     # has the closest angle to it
@@ -365,7 +360,6 @@ def closest_axis(source_joint, target_joint, s_exclude_axis=None, t_exclude_axis
             continue
         for t_vector in target_vectors:
             if(t_vector == None):
-                print("Skipping {}".format(t_vector))
                 continue
             if(s_vector.angle(t_vector) < smallest_angle):
                 smallest_angle = s_vector.angle(t_vector)

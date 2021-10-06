@@ -4,7 +4,7 @@
 
 
 import coord_math as cmath
-from constants import GENERIC_KEYS
+from constants import GENERIC_KEYS, SR_MAPPING
 import orientation as ori
 import pymel.core as pm
 import pymel.core.datatypes as dt
@@ -98,7 +98,6 @@ def import_and_match():
     print("Skeleton matched.")
 
 
-
 def construct_from_datablock(datablock):
     '''
     A subprocess of skeleton-matching.
@@ -118,7 +117,7 @@ def construct_from_datablock(datablock):
         rebuilt_joint.jointOrient.set(j_orient)
 
 
-def translate_from_scene(data_block, import_map, export_map):
+def translate_from_scene(data_block):
     '''
     A subprocess of skeleton-matching.
     orient all the contents created by the datablock to the "matches" found in scene.
@@ -208,3 +207,47 @@ def hierarchy_from_datablock(datablock):
             print('Parenting {} to {}'.format(joint_node, parent_name))
 
             pm.parent(joint_node, parent_name)
+
+
+def copy_orient_from_example(datablock, standard):
+    '''
+    Given a skeleton of our standard in scene, and a skeleton of the client standard freshly rebuilt
+    start to copy the axis as intelligently as possible from the latter to the former.
+    '''
+
+    result = {'skipped':[], 'smart':[], 'dumb':[]}
+
+    for map in GENERIC_KEYS:
+        print("Mapping  is {}".format(map))
+        key = map[0]
+        children = map[1]
+
+        if((SR_MAPPING[key] == '') or (standard[key] == '')):
+            print("Skipping {}...".format(map[0]))
+            result['skipped'].append(map[0])
+            continue
+
+        print("Generic Key {}:".format(key))
+        if(len(children) < 1):
+            print("...no children.")
+            target_child = None
+            source_child = None
+        elif(len(children) == 1):
+            print("...one child: {}".format(children[0]))
+            target_child = pm.PyNode(SR_MAPPING[children[0]])
+            source_child = pm.PyNode(standard[children[0]])
+        elif(len(children) > 1):
+            print("...multiple children: {}".format(children))
+            target_child = None
+            source_child = None
+
+        local_joint = SR_MAPPING[key]
+        client_joint = standard[key]
+
+        source_joint = pm.PyNode(client_joint)
+        target_joint = pm.PyNode(local_joint)
+        print("Copying orientation from {} to {}".format(source_joint, target_joint))
+        ori.smart_copy_orient(subject=source_joint, target=target_joint, child=target_child)
+        print("Done... \n")
+
+        
