@@ -217,8 +217,10 @@ def copy_orient_from_example(datablock, standard):
 
     result = {'skipped':[], 'smart':[], 'dumb':[]}
 
+    dumb_list = []
+
     for map in GENERIC_KEYS:
-        print("Mapping  is {}".format(map))
+        print("Mapping is {}".format(map))
         key = map[0]
         children = map[1]
 
@@ -234,8 +236,14 @@ def copy_orient_from_example(datablock, standard):
             source_child = None
         elif(len(children) == 1):
             print("...one child: {}".format(children[0]))
-            target_child = pm.PyNode(SR_MAPPING[children[0]])
-            source_child = pm.PyNode(standard[children[0]])
+            if(SR_MAPPING[children[0]] != ''):
+                target_child = pm.PyNode(SR_MAPPING[children[0]])
+            else:
+                target_child = None
+            if(standard[children[0]] != ''):
+                source_child = pm.PyNode(standard[children[0]])
+            else:
+                source_child = None
         elif(len(children) > 1):
             print("...multiple children: {}".format(children))
             target_child = None
@@ -244,10 +252,30 @@ def copy_orient_from_example(datablock, standard):
         local_joint = SR_MAPPING[key]
         client_joint = standard[key]
 
-        source_joint = pm.PyNode(client_joint)
-        target_joint = pm.PyNode(local_joint)
+        try:
+            source_joint = pm.PyNode(client_joint)
+        except:
+            pm.error("Couldn't get a pynode of {}.  Is there two in the scene?".
+                format(client_joint))
+
+        try:
+            target_joint = pm.PyNode(local_joint)
+        except:
+            pm.error("couldn't get a pynode of  {}.  Is there two in the scene?".
+                format(target_joint))
         print("Copying orientation from {} to {}".format(source_joint, target_joint))
-        ori.smart_copy_orient(subject=source_joint, target=target_joint, child=target_child)
-        print("Done... \n")
+
+        if(source_child != None):
+            ori.smart_copy_orient(
+                subject=source_joint, target=target_joint, s_child=source_child, 
+                t_child=target_child
+                )
+        else:
+            ori.dumb_copy_orient(subject=source_joint, target=target_joint)
+            dumb_list.append(target_joint.name())
+
+    print("Oriented {} joints using a \"dumb copy orient\", please double check these:\n{}".
+        format(len(dumb_list), dumb_list))
+    print("Done... \n")
 
         

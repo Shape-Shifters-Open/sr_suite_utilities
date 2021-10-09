@@ -8,7 +8,7 @@ import pymel.core as pm
 import pymel.core.datatypes as dt
 
 
-def smart_copy_orient(subject=None, target=None, child=None):
+def smart_copy_orient(subject=None, target=None, s_child=None, t_child=None):
     '''
     'smartly' copies the orientation from one joint to another, preserving the actual orientation by
     degrees, but fully re-aligning the axial orientation.
@@ -30,11 +30,11 @@ def smart_copy_orient(subject=None, target=None, child=None):
     # The angle-discovering and comparing operations that make this possible:
     # Step one, find the 'down' vector-- the vector that points to the child joint and record the 
     # "swap"
-    s_down_vec = find_down_axis(subject)
-    t_down_vec = find_down_axis(target)
+    s_down_vec = find_down_axis(subject, child_name=s_child)
+    t_down_vec = find_down_axis(target, child_name=t_child)
 
     if(s_down_vec == None or t_down_vec == None):
-        if(child==None):
+        if(s_child==None or t_child==None):
             pm.error("There's no child joint to derive a down vector from on one or both {} and {}"
             .format(subject, target))
  
@@ -50,6 +50,24 @@ def smart_copy_orient(subject=None, target=None, child=None):
     swap_axis(target, aim_swap=down_swap, up_swap=side_swap, orient_joint=True)
 
     return
+
+
+def dumb_copy_orient(subject=None, target=None):
+    '''
+    Given a target pynode and a subject pynode (Or selections), match the orientation of the target 
+    with the subjects.
+    '''
+
+    if(subject == None or target == None):
+        selection = pm.ls(sl=True)
+        if(len(selection) != 2):
+            pm.error("Must select exactly two joints for this operation.")
+        else:
+            subject = selection[0]
+            target = selection[1]
+
+    copied_matrix = subject.getMatrix(worldSpace=True)
+    target.setMatrix(copied_matrix, worldSpace=True)
 
 
 def swap_axis(subject, aim_swap, up_swap, orient_joint=False, parent_safe=True):
@@ -117,8 +135,7 @@ def swap_axis(subject, aim_swap, up_swap, orient_joint=False, parent_safe=True):
     if(xfor == None):
         pass
     elif(xfor == 'x'):
-        pm.error("Tried to swap x for x; xfor flag must be a different axis than x.")
-        return
+        t_x_vec = s_x_vec
     elif(xfor == 'y'):
         t_x_vec = s_y_vec
     elif(xfor == 'z'):
@@ -138,8 +155,7 @@ def swap_axis(subject, aim_swap, up_swap, orient_joint=False, parent_safe=True):
     elif(yfor == 'x'):
         t_y_vec = s_x_vec
     elif(yfor == 'y'):
-        pm.error("Tried to swap y for y, yfor flag must be a different axis than y.")
-        return
+        t_y_vec = s_y_vec
     elif(yfor == 'z'):
         t_y_vec = s_z_vec
     elif(yfor == '-x'):
@@ -159,8 +175,7 @@ def swap_axis(subject, aim_swap, up_swap, orient_joint=False, parent_safe=True):
     elif(zfor == 'y'):
         t_z_vec = s_y_vec
     elif(zfor == 'z'):
-        pm.error("Tried to swap z for z, zfor flag must be a different axis than z.")
-        return
+        t_z_vec = s_y_vec
     elif(zfor == '-x'):
         t_z_vec = -s_x_vec
     elif(zfor == '-y'):
