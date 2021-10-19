@@ -6,14 +6,15 @@ Module for constraint related automation
 
 import pymel.core as pm
 
-cons_types = ['pointConstraint', 'parentConstraint', 'aimConstraint', 'scaleConstraint']
+cons_types = ['pointConstraint', 'parentConstraint', 'aimConstraint', 'scaleConstraint', 
+    'orientConstraint']
 
 class StoredConstraint:
     '''
     Instance contrain all the data for remaking a constraint.
     '''
 
-    def __init__(self, node, delete=False):
+    def __init__(self, node, delete=True):
         '''
         Specify a constraint node as 'node'
         '''
@@ -31,25 +32,112 @@ class StoredConstraint:
         # The connected attributes must be found and stored.
         input_list = node.listConnections(p=True, d=True, s=False, c=True)
 
-        self.ctx = self.cty = self.ctz = None
-        self.crx = self.cry = self.crz = None
+        # These input connections are for the channel box content. All set to none in the case 
+        # Of constraint types that don't require them all.
+        self.input_connections = [None, None, None, None, None, None, None, None, None]
+
+        # Target transform will be discovered in this loop:
+        self.target_trans = None
  
         for connex in input_list:
+            print(connex)
+            print(connex[0].attrName())
             if(connex[0].attrName() == 'ctx'):
-                self.ctx = (connex[1].node(), connex[1].attrName())
+                self.input_connections[0] = (connex[1].node(), connex[1].attrName())
             elif(connex[0].attrName() == 'cty'):
-                self.cty = (connex[1].node(), connex[1].attrName()) 
+                self.input_connections[1] = (connex[1].node(), connex[1].attrName()) 
             elif(connex[0].attrName() == 'ctz'):
-                self.ctz = (connex[1].node(), connex[1].attrName())
+                self.input_connections[2] = (connex[1].node(), connex[1].attrName())
 
             elif(connex[0].attrName() == 'crx'):
-                self.crx = (connex[1].node(), connex[1].attrName())
+                self.input_connections[3] = (connex[1].node(), connex[1].attrName())
             elif(connex[0].attrName() == 'cry'):
-                self.cry = (connex[1].node(), connex[1].attrName())
+                self.input_connections[4] = (connex[1].node(), connex[1].attrName())
             elif(connex[0].attrName() == 'crz'):
-                self.crz = (connex[1].node(), connex[1].attrName())
+                self.input_connections[5] = (connex[1].node(), connex[1].attrName())
+
+            elif(connex[0].attrName() == 'csx'):
+                self.input_connections[6] = (connex[1].node(), connex[1].attrName())
+            elif(connex[0].attrName() == 'csy'):
+                self.input_connections[7] = (connex[1].node(), connex[1].attrName())
+            elif(connex[0].attrName() == 'csz'):
+                self.input_connections[8] = (connex[1].node(), connex[1].attrName())
+
+            # We detect the target transform by seeing if any of the transform channels are 
+            # connected.
+            if(self.target_trans == None):
+                if(connex[0].attrName() in ['ctx', 'cty', 'ctz', 'crx', 'cry', 'crz', 'csx', 'csy', 
+                    'csz']):
+                    self.target_trans = connex[1].node()
+
+        # The connected attributes must be found and stored.
+        output_list = node.listConnections(p=True, d=False, s=True, c=True)
+        self.output_connections = []
+        self.output_targets = []
+
+        for out_connex in output_list:
+            print(out_connex)
+            print(out_connex[0].attrName())
+            if(out_connex[0].attrName() == 'tw'):
+                self.output_connections.append(out_connex[0])
+            if(out_connex[0].attrName() in ['tr', 'tt', 'trp', 'trt']):
+                if(out_connex[1].node() not in self.output_targets):
+                    self.output_targets.append(out_connex[1].node())
+
+        # Store the node name of the constraint node for rebuilding:
+        self.name = node.name()
+
+        if(delete):
+            pm.delete(node)
+
+        return
+
+    
+    def report(self):
+        '''
+        Reports all the stored content of the instance.
+        Generally for debug purposes.
+        '''
+
+        for attribute in dir(self):
+            if("__" in attribute or attribute in ['report', 'rebuild']):
+                continue
+            print("{}:".format(attribute))
+            exec("print(self.{}\n)".format(attribute))
+            print('\n')
+
+        return
 
 
+    def rebuild(self):
+        '''
+        Using the stored data, remake the constraint as it was.
+        '''
 
+        if(self.type == cons_types.index('pointConstraint')):
+            print("Rebuilding a pointConstraint called {}".format(self.name))
+            skip_string = ''
+            # Determine the skip_axis
+            if(self.input_connections[0] == None):
+                skip_string.append('x')
+            if(self.input_connections[1] == None):
+                skip_string.append('y')
+            if(self.input_connections[2] == None):
+                skip_string.append('z')
+                
+            print("skip string is {}".format(skip_string))
+            # Remake a point constraint
+            if(skip_string != ''):
+                pm.pointConstraint(
+                    self.target_trans, self.output_targets, mo=True, sk=skip_string, n=self.name
+                    )
+
+            else:
+                pm.pointConstraint(self.target_trans, self.output_targets, mo=True, n=self.name)
+
+
+        return
+
+        
 
 
