@@ -136,7 +136,7 @@ class StoredConstraint:
 
         elif(self.type == cons_types.index('parentConstraint')):
             print("Rebuilding a parentConstraint called {}".format(self.name))
-            trans_skip_string = rot_skip_string = None
+            trans_skip_string = rot_skip_string = 'none'
 
             # What happens next is somewhat ugly-- None as the channel skip argument will skip no
             # channels, but we have to compose a string of 'xyz' or just 'x' or any combo to get 
@@ -146,29 +146,29 @@ class StoredConstraint:
 
             # Build the skip translate argument string;
             if(self.input_connections[0] == None):
-                if(trans_skip_string == None):
+                if(trans_skip_string == 'none'):
                     trans_skip_string = ''
                 trans_skip_string += 'x'
             if(self.input_connections[1] == None):
-                if(trans_skip_string == None):
+                if(trans_skip_string == 'none'):
                     trans_skip_string = ''
                 trans_skip_string += 'y'
             if(self.input_connections[2] == None):
-                if(trans_skip_string == None):
+                if(trans_skip_string == 'none'):
                     trans_skip_string = ''
                 trans_skip_string += 'z'
 
             # Build the skip rotation argument string;
             if(self.input_connections[3] == None):
-                if(rot_skip_string == None):
+                if(rot_skip_string == 'none'):
                     rot_skip_string = ''
                 rot_skip_string += 'x'
             if(self.input_connections[4] == None):
-                if(rot_skip_string == None):
+                if(rot_skip_string == 'none'):
                     rot_skip_string = ''
                 rot_skip_string += 'y'
             if(self.input_connections[5] == None):
-                if(rot_skip_string == None):
+                if(rot_skip_string == 'none'):
                     rot_skip_string = ''
                 rot_skip_string += 'z'
             
@@ -180,19 +180,19 @@ class StoredConstraint:
         elif(self.type == cons_types.index('orientConstraint')):
             print("Rebuilding an orientConstraint called {}".format(self.name))
 
-            rot_skip_string = None
+            rot_skip_string = 'none'
 
             # Build the skip rotation argument string;
             if(self.input_connections[3] == None):
-                if(rot_skip_string == None):
+                if(rot_skip_string == 'none'):
                     rot_skip_string = ''
                 rot_skip_string += 'x'
             if(self.input_connections[4] == None):
-                if(rot_skip_string == None):
+                if(rot_skip_string == 'none'):
                     rot_skip_string = ''
                 rot_skip_string += 'y'
             if(self.input_connections[5] == None):
-                if(rot_skip_string == None):
+                if(rot_skip_string == 'none'):
                     rot_skip_string = ''
                 rot_skip_string += 'z'
 
@@ -206,15 +206,15 @@ class StoredConstraint:
             s_skip_string = None
             # Build the skip rotation argument string;
             if(self.input_connections[6] == None):
-                if(s_skip_string == None):
+                if(s_skip_string == 'none'):
                     s_skip_string = ''
                 s_skip_string += 'x'
             if(self.input_connections[7] == None):
-                if(s_skip_string == None):
+                if(s_skip_string == 'none'):
                     s_skip_string = ''
                 s_skip_string += 'y'
             if(self.input_connections[8] == None):
-                if(s_skip_string == None):
+                if(s_skip_string == 'none'):
                     s_skip_string = ''
                 s_skip_string += 'z'
 
@@ -225,5 +225,26 @@ class StoredConstraint:
         return
 
         
+def identify_constraints(node):
+    '''
+    Find any constraints upstream from a given node.
+    '''
 
+    constraint_types = [
+        'orientConstraint', 'parentConstraint', 'pointConstraint', 'scaleConstraint'
+        ]
 
+    up_stream_nodes = pm.listConnections(node)
+
+    constraint_nodes = []
+
+    for up_node in up_stream_nodes:
+        if(up_node.type() in constraint_types):
+            if(up_node not in constraint_nodes):
+                print("Constraint found incoming to {}; {}".format(node, up_node))
+                constraint_nodes.append(up_node)
+
+    if(constraint_nodes == []):
+        print("Nothing constrains {}".format(node))
+
+    return constraint_nodes

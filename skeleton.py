@@ -9,6 +9,7 @@ import orientation as ori
 import pymel.core as pm
 import pymel.core.datatypes as dt
 import fbx_utils as fbx
+import constraints as cns
 
 def joint_from_components(name="_JNT"):
     '''
@@ -265,6 +266,13 @@ def copy_orient_from_example(datablock, standard):
                 format(target_joint))
         print("Copying orientation from {} to {}".format(source_joint, target_joint))
 
+        # Must store all constraints and removed them so that the orientation can happen.  
+        cons_on_target = cns.identify_constraints(target_joint)
+        stored_cons = []
+        for constraint_node in cons_on_target:
+            print("Attempting to store constraint node: {}".format(constraint_node))
+            stored_cons.append(cns.StoredConstraint(constraint_node))
+
         if(source_child != None):
             ori.smart_copy_orient(
                 subject=source_joint, target=target_joint, s_child=source_child, 
@@ -273,6 +281,11 @@ def copy_orient_from_example(datablock, standard):
         else:
             ori.dumb_copy_orient(subject=source_joint, target=target_joint)
             dumb_list.append(target_joint.name())
+
+        # Now rebuild all the constraints.
+        for cons in stored_cons:
+            print("Rebuilding {}".format(cons.name))
+            cons.rebuild()
 
     print("Oriented {} joints using a \"dumb copy orient\", please double check these:\n{}".
         format(len(dumb_list), dumb_list))
