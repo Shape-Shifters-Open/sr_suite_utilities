@@ -129,12 +129,98 @@ class StoredConstraint:
             # Remake a point constraint
             if(skip_string != ''):
                 pm.pointConstraint(
-                    self.target_trans, self.output_targets, mo=True, sk=skip_string, n=self.name
+                    self.output_targets, self.target_trans, mo=True, sk=skip_string, n=self.name
                     )
-
             else:
-                pm.pointConstraint(self.target_trans, self.output_targets, mo=True, n=self.name)
+                pm.pointConstraint(self.output_targets, self.target_trans, mo=True, n=self.name)
 
+        elif(self.type == cons_types.index('parentConstraint')):
+            print("Rebuilding a parentConstraint called {}".format(self.name))
+            trans_skip_string = rot_skip_string = None
+
+            # What happens next is somewhat ugly-- None as the channel skip argument will skip no
+            # channels, but we have to compose a string of 'xyz' or just 'x' or any combo to get 
+            # the right argument.  We can't execute the .append() unless we are working on a string
+            # so we continually check if it == None over and over.  Can't see a way that is any more
+            # elegant.  I suppose a definition inside a definition wouldn't be too crazy.
+
+            # Build the skip translate argument string;
+            if(self.input_connections[0] == None):
+                if(trans_skip_string == None):
+                    trans_skip_string = ''
+                trans_skip_string += 'x'
+            if(self.input_connections[1] == None):
+                if(trans_skip_string == None):
+                    trans_skip_string = ''
+                trans_skip_string += 'y'
+            if(self.input_connections[2] == None):
+                if(trans_skip_string == None):
+                    trans_skip_string = ''
+                trans_skip_string += 'z'
+
+            # Build the skip rotation argument string;
+            if(self.input_connections[3] == None):
+                if(rot_skip_string == None):
+                    rot_skip_string = ''
+                rot_skip_string += 'x'
+            if(self.input_connections[4] == None):
+                if(rot_skip_string == None):
+                    rot_skip_string = ''
+                rot_skip_string += 'y'
+            if(self.input_connections[5] == None):
+                if(rot_skip_string == None):
+                    rot_skip_string = ''
+                rot_skip_string += 'z'
+            
+            pm.parentConstraint(
+                self.output_targets, self.target_trans, st=trans_skip_string, 
+                sr=rot_skip_string, mo=True, n=self.name
+                )
+
+        elif(self.type == cons_types.index('orientConstraint')):
+            print("Rebuilding an orientConstraint called {}".format(self.name))
+
+            rot_skip_string = None
+
+            # Build the skip rotation argument string;
+            if(self.input_connections[3] == None):
+                if(rot_skip_string == None):
+                    rot_skip_string = ''
+                rot_skip_string += 'x'
+            if(self.input_connections[4] == None):
+                if(rot_skip_string == None):
+                    rot_skip_string = ''
+                rot_skip_string += 'y'
+            if(self.input_connections[5] == None):
+                if(rot_skip_string == None):
+                    rot_skip_string = ''
+                rot_skip_string += 'z'
+
+            pm.orientConstraint(
+                self.output_targets, self.target_trans, sk=rot_skip_string, mo=True, n=self.name
+                )
+
+        elif(self.type == cons_types.index('scaleConstraint')):
+            print("Rebuilding a scaleConstraint called {}".format(self.name))
+
+            s_skip_string = None
+            # Build the skip rotation argument string;
+            if(self.input_connections[6] == None):
+                if(s_skip_string == None):
+                    s_skip_string = ''
+                s_skip_string += 'x'
+            if(self.input_connections[7] == None):
+                if(s_skip_string == None):
+                    s_skip_string = ''
+                s_skip_string += 'y'
+            if(self.input_connections[8] == None):
+                if(s_skip_string == None):
+                    s_skip_string = ''
+                s_skip_string += 'z'
+
+            pm.scaleConstraint(
+                self.output_targets, self.target_trans, sk=s_skip_string, mo=True, n=self.name
+                )
 
         return
 
