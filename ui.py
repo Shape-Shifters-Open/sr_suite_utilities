@@ -120,7 +120,7 @@ class MainDialog(QtWidgets.QDialog):
 
     def create_connections(self):
         self.jfc_btn.clicked.connect(self.ui_joint_from_component)
-        self.smart_copy_orient_btn.connect(self.ui_smart_copy_orient)
+        self.smart_copy_orient_btn.clicked.connect(self.ui_smart_copy_orient)
         self.harden_btn.clicked.connect(self.ui_harden_skin)
         self.copy_sw_btn.clicked.connect(self.ui_copy_skinweights)
         self.find_rs_btn.clicked.connect(self.ui_find_related_cluster)

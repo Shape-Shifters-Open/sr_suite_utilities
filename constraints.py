@@ -80,7 +80,7 @@ class StoredConstraint:
             print(out_connex[0].attrName())
             if(out_connex[0].attrName() == 'tw'):
                 self.output_connections.append(out_connex[0])
-            if(out_connex[0].attrName() in ['tr', 'tt', 'trp', 'trt']):
+            if(out_connex[0].attrName() in ['tr', 'tt', 'trp', 'trt', 'ts']):
                 if(out_connex[1].node() not in self.output_targets):
                     self.output_targets.append(out_connex[1].node())
 
@@ -203,7 +203,7 @@ class StoredConstraint:
         elif(self.type == cons_types.index('scaleConstraint')):
             print("Rebuilding a scaleConstraint called {}".format(self.name))
 
-            s_skip_string = None
+            s_skip_string = 'none'
             # Build the skip rotation argument string;
             if(self.input_connections[6] == None):
                 if(s_skip_string == 'none'):
@@ -218,6 +218,11 @@ class StoredConstraint:
                     s_skip_string = ''
                 s_skip_string += 'z'
 
+
+            print("DEBUG: output targets are: {}\nTarget trans is {}".format(self.output_targets, self.target_trans))
+
+            self.report()
+            
             pm.scaleConstraint(
                 self.output_targets, self.target_trans, sk=s_skip_string, mo=True, n=self.name
                 )
