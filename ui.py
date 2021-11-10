@@ -13,14 +13,14 @@ import skeleton
 import skinning
 import handles
 import connections
-
+from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()
     return wrapInstance(long(main_window_ptr), QtWidgets.QWidget)
 
 
-class MainDialog(QtWidgets.QDialog):
+class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
     
     def __init__(self, parent=maya_main_window()):
         super(MainDialog, self).__init__(parent)
@@ -52,7 +52,7 @@ class MainDialog(QtWidgets.QDialog):
 
         # Skinning Tab:
         self.skin_tab = QtWidgets.QWidget()
-        self.tools_tab.addTab(self.skin_tab, "Skinning")
+        self.tools_tab.addTab(self.skin_tab, "skinning")
         
         self.copy_sw_btn = QtWidgets.QPushButton(self.skin_tab)
         self.copy_sw_btn.setText("Copy SkinWeights")
@@ -79,9 +79,30 @@ class MainDialog(QtWidgets.QDialog):
         # Connections tab
         self.connections_tab = QtWidgets.QWidget()
         self.tools_tab.addTab(self.connections_tab, "Connections")
-
         self.h_connect_xforms_btn = QtWidgets.QPushButton(self.connections_tab)
         self.h_connect_xforms_btn.setText("Connect Xform")
+
+        #     add driver attribute prompt and textbox
+        self.h_input_driver_txtbox = QtWidgets.QLabel(self.connections_tab)
+        self.h_input_driver_txtbox.setText("Input Driver Attribute")
+        self.get_driver = QtWidgets.QLineEdit(self.connections_tab)
+        self.get_driver.move(150, 36)
+        self.get_driver.resize(200, 20)
+
+        #     add driven attribute prompt and textbox
+        self.h_input_driven_txtbox = QtWidgets.QLabel(self.connections_tab)
+        self.h_input_driven_txtbox.setText("Input Driven Attributes")
+        self.get_driven = QtWidgets.QLineEdit(self.connections_tab)
+        self.get_driven.move(150, 57)
+        self.get_driven.resize(200, 20)
+
+        #    attribute connector button
+        self.h_batch_connector_btn = QtWidgets.QPushButton(self.connections_tab)
+        self.h_batch_connector_btn.setText("Connect Attributes")
+
+
+
+
 
         # FKIK Ttab
         self.fkik_tab = QtWidgets.QWidget()
@@ -112,6 +133,10 @@ class MainDialog(QtWidgets.QDialog):
         # Create Connections Tab layout:
         connections_tab_layout = QtWidgets.QFormLayout(self.connections_tab)
         connections_tab_layout.addRow(self.h_connect_xforms_btn)
+        connections_tab_layout.addRow(self.h_input_driver_txtbox)
+        connections_tab_layout.addRow(self.h_input_driven_txtbox)
+        connections_tab_layout.addRow(self.h_batch_connector_btn)
+
 
 
     def create_connections(self):
@@ -122,6 +147,12 @@ class MainDialog(QtWidgets.QDialog):
         self.select_bj_btn.clicked.connect(self.ui_find_related_joints)
         self.h_create_offset_btn.clicked.connect(self.ui_create_offset)
         self.h_connect_xforms_btn.clicked.connect(self.ui_connect_xform)
+        self.get_driver.text()
+        self.get_driven.text()
+        self.h_batch_connector_btn.clicked.connect(self.ui_batch_connect)
+
+
+
 
 
     # UI commands:
@@ -154,6 +185,12 @@ class MainDialog(QtWidgets.QDialog):
         print ("UI call for connections.connect_xforms()")
         connections.connect_xforms()
 
+    def ui_batch_connect(self):
+        print ("UI call for connections.batch_connect()")
+        #uses input attributes for parameters
+        connections.batch_connect(str(self.get_driver.text()), str(self.get_driven.text()))
+
+
     
 def run():
     try:
@@ -163,4 +200,4 @@ def run():
         pass
 
     srsu_main_dialog = MainDialog()
-    srsu_main_dialog.show()
+    srsu_main_dialog.show(dockable=True, floating=True)
