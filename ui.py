@@ -52,7 +52,7 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
         # Skinning Tab:
         self.skin_tab = QtWidgets.QWidget()
-        self.tools_tab.addTab(self.skin_tab, "not skinning")
+        self.tools_tab.addTab(self.skin_tab, "skinning")
         
         self.copy_sw_btn = QtWidgets.QPushButton(self.skin_tab)
         self.copy_sw_btn.setText("Copy SkinWeights")
