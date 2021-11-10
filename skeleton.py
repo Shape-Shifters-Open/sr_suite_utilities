@@ -292,3 +292,44 @@ def copy_orient_from_example(datablock, standard):
     print("Done... \n")
 
         
+def copy_skeleton(base_joint=None):
+    '''
+    Given a base_joint as a argument or selection, make a copy of that skeleton that is stripped of
+    all constraints.
+    
+    usage:
+    copy_skeleton(base_joint=[joint])
+    base_joint - The joint at the top of a rigs hierarchy.
+    '''
+
+    # If no argument is given, fall back to viewport selection
+    if(base_joint is None):
+        base_joint = pm.ls(sl=True)[0]
+        print("No args given, using viewport selection {}".format(base_joint))
+
+    decendent_joints = pm.listRelatives(base_joint, ad=True, type='joint') + [base_joint]
+    duplicated_joints = pm.duplicate(decendent_joints, ic=False, un=False)
+
+
+    # We find out which name is the new base, since the base will be the only name that is forced 
+    # to be unique.
+    duplicated_base = None
+    for joint in duplicated_joints:
+        # Weirdly, 'long=None' is a third option for this otherwise boolean flag.  Will return 
+        # absolute name, no path. This is essential for the "is not unique" check I'm doing.
+        if(len(pm.ls(joint.name(long=None))) > 1):
+            # When len of the joint name (when long=None only) is > 1, that's proof it's not unique.
+            continue
+        else:
+            # The unique one that was created during duplication is garunteed to be our base.
+            duplicated_base = joint
+            break
+
+    # Let's assert this was found and crash if it wasn't.
+    if(duplicated_base is None):
+        pm.error("The duplicated base joint wasn't determined-- it never became unique after copy?")
+
+    duplicated_base.rename("duplicate_{}".format(base_joint.name()))
+
+    return duplicated_base
+
