@@ -75,7 +75,7 @@ def duplicate_skeleton(prefix="duplicated_", joints_list=[]):
     return new_roots
 
 
-def import_and_match():
+def import_as_datablock():
     '''
     Runs the import and performs the matching process
     '''
@@ -122,7 +122,7 @@ def translate_from_scene(data_block):
     '''
     A subprocess of skeleton-matching.
     orient all the contents created by the datablock to the "matches" found in scene.
-    This is to be run after 'construct_from_datablock as put the rebuilt joints in the scene.
+    This is to be run after 'construct_from_datablock' as put the rebuilt joints in the scene.
     '''
 
     print('Matching imported skeleton...')
@@ -210,14 +210,116 @@ def hierarchy_from_datablock(datablock):
             pm.parent(joint_node, parent_name)
 
 
+def build_reoriented_skeleton(our_basejoint, datablock, standard):
+    '''
+    Given the base joint of our rig, make a copy of the bones to map on.
+    Then using the client standard datablock and a temporarily rebuilt copy, we start to use our 
+    mapping tech to intelligently make our first copy oriented the same as our second copy.
+
+    usage:
+    build_reoriented_skeleton([joint at top of our standard rig], datablock, standard)
+    our_basejoint = A joint node found at the top of the hierarchy of our rig.
+    datablock = the imported datablock built from  'import_as_datablock'
+    standard
+    '''
+
+    new_base = copy_skeleton(base_joint=our_basejoint)
+
+    target_joints = (pm.listRelatives(new_base, ad=True, type='joint') + [new_base])
+
+    # Prepare to collect some feedback stats.
+    result = {'skipped':[], 'smart':[], 'dumb':[]}
+    dumb_list = []
+
+    for map in GENERIC_KEYS:
+        print("mapping is {}".format(map))
+        key = map[0]
+        children = map[1]
+
+        if((SR_MAPPING[key] == '') or (standard[key] == '')):
+            print("Skipping {}...".format(map[0]))
+            result['skipped'].append(map[0])
+            continue
+
+        print("Generic Key {}:".format(key))
+        if(len(children) < 1):
+            print("...no children.")
+            target_child = None
+            source_child = None
+        elif(len(children) == 1):
+            print("...one child: {}".format(children[0]))
+            if(SR_MAPPING[children[0]] != ''):
+                target_child = pm.PyNode(SR_MAPPING[children[0]])
+            else:
+                target_child = None
+            if(standard[children[0]] != ''):
+                source_child = pm.PyNode(standard[children[0]])
+            else:
+                source_child = None
+        elif(len(children) > 1):
+            print("...multiple children: {}".format(children))
+            target_child = None
+            source_child = None
+
+        # The string "remap" is a hacky way of making sure we are operating on the copyied skel.
+        local_joint = ("remap_" + SR_MAPPING[key])
+        print("Local joint name is {}".format(local_joint))
+        client_joint = standard[key]
+
+        try:
+            source_joint = pm.PyNode(client_joint)
+        except:
+            pm.error("Couldn't get a pynode of {}.  Is there two in the scene?".
+                format(client_joint))
+
+        try:
+            target_joint = pm.PyNode(local_joint)
+        except:
+            pm.error("couldn't get a pynode of  {}.  Is there two in the scene?".
+                format(target_joint))
+        print("Copying orientation from {} to {}".format(source_joint, target_joint))
+
+        # Must store all constraints and removed them so that the orientation can happen.  
+        cons_on_target = cns.identify_constraints(target_joint)
+        stored_cons = []
+        for constraint_node in cons_on_target:
+            print("Attempting to store constraint node: {}".format(constraint_node))
+            stored_cons.append(cns.StoredConstraint(constraint_node))
+
+        if(source_child != None):
+            ori.smart_copy_orient(
+                subject=source_joint, target=target_joint, s_child=source_child, 
+                t_child=target_child
+                )
+        else:
+            ori.dumb_copy_orient(subject=source_joint, target=target_joint)
+            dumb_list.append(target_joint.name())
+
+        # Now rebuild all the constraints.
+        for cons in stored_cons:
+            print("Rebuilding {}".format(cons.name))
+            cons.rebuild()
+
+    print("Oriented {} joints using a \"dumb copy orient\", please double check these:\n{}".
+        format(len(dumb_list), dumb_list))
+    print("Done... \n")
+
+
+
+
+
+
+
 def copy_orient_from_example(datablock, standard):
     '''
+
+    Possibly deprecated:
     Given a skeleton of our standard in scene, and a skeleton of the client standard freshly rebuilt
     start to copy the axis as intelligently as possible from the latter to the former.
     '''
 
+    # Prepare to collect some feedback stats.
     result = {'skipped':[], 'smart':[], 'dumb':[]}
-
     dumb_list = []
 
     for map in GENERIC_KEYS:
@@ -292,7 +394,7 @@ def copy_orient_from_example(datablock, standard):
     print("Done... \n")
 
         
-def copy_skeleton(base_joint=None):
+def copy_skeleton(base_joint=None, prefix=None, base_name='duplicate'):
     '''
     Given a base_joint as a argument or selection, make a copy of that skeleton that is stripped of
     all constraints.
@@ -307,9 +409,10 @@ def copy_skeleton(base_joint=None):
         base_joint = pm.ls(sl=True)[0]
         print("No args given, using viewport selection {}".format(base_joint))
 
+    base_joint_old_name = base_joint.name(long=None)
+
     decendent_joints = pm.listRelatives(base_joint, ad=True, type='joint') + [base_joint]
     duplicated_joints = pm.duplicate(decendent_joints, ic=False, un=False)
-
 
     # We find out which name is the new base, since the base will be the only name that is forced 
     # to be unique.
@@ -329,7 +432,17 @@ def copy_skeleton(base_joint=None):
     if(duplicated_base is None):
         pm.error("The duplicated base joint wasn't determined-- it never became unique after copy?")
 
-    duplicated_base.rename("duplicate_{}".format(base_joint.name()))
+    if(prefix is not None):
+        for joint in duplicated_joints:
+            # Give it a unique name:
+            new_name = (prefix + '_' + joint.name(long=None))
+            print("{} renamed to {}".format(joint.name(long=None), new_name))
+            pm.rename(joint, new_name)
+        duplicated_base.rename(prefix + '_' + base_joint_old_name)
+
+    else:
+        # Without a prefix, duplicate name must be fixed up.
+        duplicated_base.rename("duplicate_{}".format(base_joint_old_name))
 
     return duplicated_base
 
