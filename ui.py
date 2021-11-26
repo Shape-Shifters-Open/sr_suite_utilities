@@ -13,6 +13,9 @@ import skeleton
 import skinning
 import handles
 import connections
+import dict_lib
+import all_control_options
+
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
 def maya_main_window():
@@ -100,7 +103,28 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.h_batch_connector_btn = QtWidgets.QPushButton(self.connections_tab)
         self.h_batch_connector_btn.setText("Connect Attributes")
 
+        # Controls tab
+        self.controls_tab = QtWidgets.QWidget()
+        self.tools_tab.addTab(self.controls_tab, "Controls")
+        self.h_swap_control_btn = QtWidgets.QPushButton(self.controls_tab)
+        self.h_swap_control_btn.setText("Swap Shape")
+        #self.h_swap_control_btn.resize(370, 20)
 
+        #     add control shape options
+        self.h_control_shapes_txtbox = QtWidgets.QLabel(self.controls_tab)
+        self.h_control_shapes_txtbox.setText("Control Shapes")
+        self.h_control_shapes_txtbox.move(0, 36)
+        self.h_control_shapes_txtbox.resize(200, 20)
+        self.shape_options = QtWidgets.QComboBox(self.controls_tab)
+        self.shape_options.move(150, 36)
+        self.shape_options.resize(200, 20)
+        all_options = dict_lib.controls()
+        for key in all_options:
+            self.shape_options.addItem(key)
+
+        #     add colour options
+        self.h_color_options_btn = QtWidgets.QPushButton(self.controls_tab)
+        self.h_color_options_btn.setText("Colour Options")
 
 
 
@@ -137,6 +161,13 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         connections_tab_layout.addRow(self.h_input_driven_txtbox)
         connections_tab_layout.addRow(self.h_batch_connector_btn)
 
+        # Create Controls Tab layout:
+        controls_tab_layout = QtWidgets.QFormLayout(self.controls_tab)
+        controls_tab_layout.addRow(self.h_swap_control_btn)
+        controls_tab_layout.addRow(self.h_control_shapes_txtbox)
+        controls_tab_layout.addRow(self.h_color_options_btn)
+
+
 
 
     def create_connections(self):
@@ -151,8 +182,10 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.get_driven.text()
         self.h_batch_connector_btn.clicked.connect(self.ui_batch_connect)
 
-
-
+    def create_controls(self):
+        self.h_swap_control_btn.clicked.connect(self.ui_swap_controls)
+        self.shape_options.currentText(self.ui_control_options)
+        self.h_color_options_btn.clicked.connect(self.ui_colour_options)
 
 
     # UI commands:
@@ -189,6 +222,18 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         print ("UI call for connections.batch_connect()")
         #uses input attributes for parameters
         connections.batch_connect(str(self.get_driver.text()), str(self.get_driven.text()))
+
+    def ui_swap_controls(self):
+        print ("UI call for swapping control shape")
+        all_control_options.swap_shape()
+
+    def ui_control_options(self):
+        print ("UI call for picking control")
+        all_control_options.pick_control(self.shape_options.currentText())
+
+    def ui_colour_options(self):
+        print ("UI call for picking colour")
+        all_control_options.pick_colour()
 
 
     

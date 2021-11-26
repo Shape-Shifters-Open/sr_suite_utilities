@@ -4,7 +4,7 @@
 # import for a global controls_dict.
 
 # I spare these from linted formatting, on account of being huge.
-controls_dict = { 
+controls_dict = {
     'cube':{'knots': (0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0), 'points': [(-1.0, 1.0, 1.0), (-1.0, 1.0, -1.0), (1.0, 1.0, -1.0), (1.0, 1.0, 1.0), (-1.0, 1.0, 1.0), (-1.0, -1.0, 1.0), (-1.0, -1.0, -1.0), (-1.0, 1.0, -1.0), (-1.0, 1.0, 1.0), (-1.0, -1.0, 1.0), (1.0, -1.0, 1.0), (1.0, 1.0, 1.0), (1.0, 1.0, -1.0), (1.0, -1.0, -1.0), (1.0, -1.0, 1.0), (1.0, -1.0, -1.0), (-1.0, -1.0, -1.0)], 'per': False, 'degree': 1},
     'spike':{'knots': (0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0), 'points': [(-2.0, 0.0, 0.0), (1.0, 0.0, 1.0), (1.0, 0.0, -1.0), (-2.0, 0.0, 0.0), (1.0, 1.0, 0.0), (1.0, 0.0, 0.0), (1.0, -1.0, 0.0), (-2.0, 0.0, 0.0)], 'per': False, 'degree': 1},
     'doubleArrow':{'knots': (0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0), 'points': [(-5.0, 0.0, 0.0), (-3.0, 0.0, -2.0), (-3.0, 0.0, -1.0), (3.0, 0.0, -1.0), (3.0, 0.0, -2.0), (5.0, 0.0, 0.0), (3.0, 0.0, 2.0), (3.0, 0.0, 1.0), (-3.0, 0.0, 1.0), (-3.0, 0.0, 2.0), (-5.0, 0.0, 0.0)], 'per': False, 'degree': 1},
@@ -25,3 +25,16 @@ controls_dict = {
 }
 
 colour_dict = { 'grey':0, 'black':1, 'darkGrey':2, 'lightGrey':3, 'darkRed':4, 'navy':5, 'blue':6, 'darkGreen':7, 'darkPurple':8, 'purple':9, 'brown':10, 'darkBrown':11, 'darkOrange':12, 'red':13, 'brightGreen':14, 'paleBlue':15, 'white':16, 'yellow':17, 'cyan':18, 'selectGreen':19, 'pink':20, 'paleOrange':21, 'paleYellow':22, 'paleGreen':23, 'orange':24, 'darkYellow':25, 'uglyGreen':26, 'blueGreen':27, 'darkCyan':28, 'darkBlue':29, 'palePurple':30, 'violet':31 }
+
+def controls():
+    return controls_dict.keys()
+
+    print ("controls")
+
+def colours():
+    return colour_dict.keys()
+
+    print ("colours")
+
+def control_value(key):
+    return controls_dict.get(key)
