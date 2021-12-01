@@ -19,13 +19,16 @@ def swap_shape():
     #establishes original control shape
     orig_ctrl = all_controls[0]
     all_controls.remove(orig_ctrl)
-    orig_shape = pm.listRelatives(orig_ctrl, shapes = True)[0]
+    orig_shape = orig_ctrl.getShape()
+    print("The shape node is {} and it's type {}".format(orig_shape.name(), type(orig_shape)))
 
     #swaps individual shapes
     for ctrl in all_controls:
-        current_shape = pm.listRelatives(ctrl, shapes = True)[0]
-        pm.connectAttr(str(orig_shape) + '.local', str(current_shape) + '.create', force = True)
-        #pm.disconnectAttr(str(orig_shape) + '.local', str(current_shape) + '.create')
+        current_shape = ctrl.getShape()
+        pm.parent(orig_shape, ctrl, s=True, r=True)
+
+        pm.delete(current_shape)
+
 
 
 
