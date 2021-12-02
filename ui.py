@@ -122,6 +122,10 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         for key in all_options:
             self.shape_options.addItem(key)
 
+        self.h_control_selection_btn = QtWidgets.QPushButton(self.controls_tab)
+        self.h_control_selection_btn.setText("Set Control Shape")
+        self.control_selection = self.shape_options.currentText()
+
         #     add colour options
         self.h_color_options_btn = QtWidgets.QPushButton(self.controls_tab)
         self.h_color_options_btn.setText("Colour Options")
@@ -165,6 +169,7 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         controls_tab_layout = QtWidgets.QFormLayout(self.controls_tab)
         controls_tab_layout.addRow(self.h_swap_control_btn)
         controls_tab_layout.addRow(self.h_control_shapes_txtbox)
+        controls_tab_layout.addRow(self.h_control_selection_btn)
         controls_tab_layout.addRow(self.h_color_options_btn)
 
 
@@ -181,11 +186,13 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.get_driver.text()
         self.get_driven.text()
         self.h_batch_connector_btn.clicked.connect(self.ui_batch_connect)
-
-    def create_controls(self):
         self.h_swap_control_btn.clicked.connect(self.ui_swap_controls)
-        self.shape_options.currentText(self.ui_control_options)
+        self.shape_options.currentText()
+        self.h_control_selection_btn.clicked.connect(self.ui_control_options)
         self.h_color_options_btn.clicked.connect(self.ui_colour_options)
+
+
+
 
 
     # UI commands:
