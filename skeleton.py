@@ -223,7 +223,7 @@ def build_reoriented_skeleton(our_basejoint, datablock, standard):
     standard
     '''
 
-    new_base = copy_skeleton(base_joint=our_basejoint)
+    new_base = copy_skeleton(base_joint=our_basejoint, prefix='skel_match')
 
     target_joints = (pm.listRelatives(new_base, ad=True, type='joint') + [new_base])
 
@@ -262,7 +262,7 @@ def build_reoriented_skeleton(our_basejoint, datablock, standard):
             source_child = None
 
         # The string "remap" is a hacky way of making sure we are operating on the copyied skel.
-        local_joint = ("remap_" + SR_MAPPING[key])
+        local_joint = ("skel_match_" + SR_MAPPING[key])
         print("Local joint name is {}".format(local_joint))
         client_joint = standard[key]
 
@@ -275,16 +275,10 @@ def build_reoriented_skeleton(our_basejoint, datablock, standard):
         try:
             target_joint = pm.PyNode(local_joint)
         except:
-            pm.error("couldn't get a pynode of  {}.  Is there two in the scene?".
-                format(target_joint))
+            pm.warning("couldn't get a pynode of  {}.  Is there two in the scene?".
+                format(local_joint))
+            continue
         print("Copying orientation from {} to {}".format(source_joint, target_joint))
-
-        # Must store all constraints and removed them so that the orientation can happen.  
-        cons_on_target = cns.identify_constraints(target_joint)
-        stored_cons = []
-        for constraint_node in cons_on_target:
-            print("Attempting to store constraint node: {}".format(constraint_node))
-            stored_cons.append(cns.StoredConstraint(constraint_node))
 
         if(source_child != None):
             ori.smart_copy_orient(
@@ -295,19 +289,12 @@ def build_reoriented_skeleton(our_basejoint, datablock, standard):
             ori.dumb_copy_orient(subject=source_joint, target=target_joint)
             dumb_list.append(target_joint.name())
 
-        # Now rebuild all the constraints.
-        for cons in stored_cons:
-            print("Rebuilding {}".format(cons.name))
-            cons.rebuild()
 
     print("Oriented {} joints using a \"dumb copy orient\", please double check these:\n{}".
         format(len(dumb_list), dumb_list))
     print("Done... \n")
 
-
-
-
-
+    return
 
 
 def copy_orient_from_example(datablock, standard):
@@ -322,8 +309,10 @@ def copy_orient_from_example(datablock, standard):
     result = {'skipped':[], 'smart':[], 'dumb':[]}
     dumb_list = []
 
+    print (GENERIC_KEYS)
+
     for map in GENERIC_KEYS:
-        print("Mapping is {}".format(map))
+        print("Mapping is \"{}\"".format(map))
         key = map[0]
         children = map[1]
 
