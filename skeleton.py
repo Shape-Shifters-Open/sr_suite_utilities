@@ -35,6 +35,8 @@ def joint_from_components(name="_JNT"):
 
 def duplicate_skeleton(prefix="duplicated_", joints_list=[]):
     '''
+    DEPRECATED BY copy_skeleton()
+
     duplicate_skeleton(prefix)
     Rebuilds a skeleton exactly like the hiearchy attached to base_joint.  This helps the "Rip Skin"
     feature work.
@@ -99,7 +101,7 @@ def import_as_datablock():
     print("Skeleton matched.")
 
 
-def construct_from_datablock(datablock):
+def construct_from_datablock(datablock, prefix='data_'):
     '''
     A subprocess of skeleton-matching.
     Constructs all the nodes in scene by reading the datablock given from fbx_utils.import_skeleton
@@ -113,9 +115,12 @@ def construct_from_datablock(datablock):
         ws_euler = dt.Vector(joint_dict['world_space_pos'])
         j_orient = dt.Vector(joint_dict['jointOrient'])
         pm.select(cl=True)
-        rebuilt_joint = pm.joint(p=ws_euler, n=(joint_dict['name']))
+        rebuilt_joint = pm.joint(p=ws_euler, n=(prefix + joint_dict['name']))
+        print("built {}".format(rebuilt_joint))
         rebuilt_joint.rotateOrder.set(joint_dict['rotate_order'])
         rebuilt_joint.jointOrient.set(j_orient)
+
+    return
 
 
 def translate_from_scene(data_block):
@@ -183,7 +188,7 @@ def orient_from_datablock(datablock):
             )
 
 
-def hierarchy_from_datablock(datablock):
+def hierarchy_from_datablock(datablock, prefix='data_'):
     '''
     Reconstruct hierarchy from what is defined in the datablock, maintaining new worldspace
     orientation.
@@ -197,7 +202,8 @@ def hierarchy_from_datablock(datablock):
             name = joint_dict['name'].split(':')[-1]
         else:
             name = joint_dict['name']
-        joint_node = pm.PyNode(name)
+        print("Looking for {}".format(prefix + name))
+        joint_node = pm.PyNode(prefix + name)
 
         if(joint_dict['parent'] != None):
             if(':' in joint_dict['parent']):
@@ -205,12 +211,14 @@ def hierarchy_from_datablock(datablock):
             else:
                 parent_name = joint_dict['parent']
 
+            parent_name = prefix + parent_name
+
             print('Parenting {} to {}'.format(joint_node, parent_name))
 
             pm.parent(joint_node, parent_name)
 
 
-def build_reoriented_skeleton(our_basejoint, datablock, standard):
+def build_reoriented_skeleton(our_basejoint, datablock, standard, data_prefix='data_'):
     '''
     Given the base joint of our rig, make a copy of the bones to map on.
     Then using the client standard datablock and a temporarily rebuilt copy, we start to use our 
@@ -253,7 +261,7 @@ def build_reoriented_skeleton(our_basejoint, datablock, standard):
             else:
                 target_child = None
             if(standard[children[0]] != ''):
-                source_child = pm.PyNode(standard[children[0]])
+                source_child = pm.PyNode(data_prefix + standard[children[0]])
             else:
                 source_child = None
         elif(len(children) > 1):
@@ -267,7 +275,7 @@ def build_reoriented_skeleton(our_basejoint, datablock, standard):
         client_joint = standard[key]
 
         try:
-            source_joint = pm.PyNode(client_joint)
+            source_joint = pm.PyNode(data_prefix + client_joint)
         except:
             pm.error("Couldn't get a pynode of {}.  Is there two in the scene?".
                 format(client_joint))
@@ -401,6 +409,9 @@ def copy_skeleton(base_joint=None, prefix=None, base_name='duplicate'):
     base_joint_old_name = base_joint.name(long=None)
 
     decendent_joints = pm.listRelatives(base_joint, ad=True, type='joint') + [base_joint]
+    # Make a list of things that aren't joints (by negating the above list from the full list.)
+    decendent_garbage = ([l for l in pm.listRelatives(base_joint, ad=True) if l not in 
+        decendent_joints])
     duplicated_joints = pm.duplicate(decendent_joints, ic=False, un=False)
 
     # We find out which name is the new base, since the base will be the only name that is forced 
@@ -421,6 +432,9 @@ def copy_skeleton(base_joint=None, prefix=None, base_name='duplicate'):
     if(duplicated_base is None):
         pm.error("The duplicated base joint wasn't determined-- it never became unique after copy?")
 
+    # Parent the base to world.
+    pm.parent(duplicated_base, w=True)
+
     if(prefix is not None):
         for joint in duplicated_joints:
             # Give it a unique name:
@@ -432,6 +446,9 @@ def copy_skeleton(base_joint=None, prefix=None, base_name='duplicate'):
     else:
         # Without a prefix, duplicate name must be fixed up.
         duplicated_base.rename("duplicate_{}".format(base_joint_old_name))
+
+    # Clean up all constraints that might have gotten built due to the downstream copying.
+    pm.delete(decendent_garbage)
 
     return duplicated_base
 
