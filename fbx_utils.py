@@ -31,13 +31,14 @@ def import_skeleton(file_path):
 		skel_node_data = []
 		duplicate_names = []
 		for node in skel_nodes:
-			print("Next node is: {}".format(node))
 			try:
 				node_data, dups = get_joint_data(node)
 				if node_data:
 					skel_node_data.append(node_data)
 				if dups:
 					duplicate_names.append(dups)
+
+				print(node_data)
 			except:
 				continue
 

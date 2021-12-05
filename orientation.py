@@ -8,7 +8,7 @@ import pymel.core as pm
 import pymel.core.datatypes as dt
 
 
-def smart_copy_orient(subject=None, target=None, s_child=None, t_child=None):
+def smart_copy_orient(subject=None, target=None, s_child=None, t_child=None, reparent=True):
     '''
     'smartly' copies the orientation from one joint to another, preserving the actual orientation by
     degrees, but fully re-aligning the axial orientation.
@@ -37,7 +37,17 @@ def smart_copy_orient(subject=None, target=None, s_child=None, t_child=None):
         if(s_child==None or t_child==None):
             pm.error("There's no child joint to derive a down vector from on one or both {} and {}"
             .format(subject, target))
- 
+
+    # Get the child to peform the deparent:
+    if(reparent):
+        if(t_child is None):
+            print("Finding child...")
+            child_joint =pm.listRelatives(target, c=True)[0]
+        else:
+            child_joint = pm.PyNode(t_child)
+        print("Deparenting {}".format(child_joint))
+        pm.parent(child_joint, w=True, a=True)
+
     down_swap = (s_down_vec[0], t_down_vec[0])
 
     # Step two, find the closest matching angles between the source and target, while excluding the 
@@ -48,6 +58,9 @@ def smart_copy_orient(subject=None, target=None, s_child=None, t_child=None):
     # Finally, knowing the swappable match facing down/aim, and the swappable match that is used as
     # an "up vector", perform the swap by deconstructing and re-constructing the matrix:
     swap_axis(target, aim_swap=down_swap, up_swap=side_swap, orient_joint=True)
+
+    if(reparent):
+        pm.parent(child_joint, target, a=True)
 
     return
 
