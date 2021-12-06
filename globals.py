@@ -4,7 +4,7 @@ globals.py
 Global settings to be read across modules.
 """
 
-srsu_version = "0.1.04pre"
+srsu_version = "0.1.05"
 
 # Standards requested by SSC clients that differ will have to be in an external JSON eventually, to 
 # hide their identity and pipeline design.

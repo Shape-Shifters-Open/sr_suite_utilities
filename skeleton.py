@@ -157,6 +157,8 @@ def orient_from_datablock(datablock):
     A subprocess of skeleton-matching.
     orient joints based on an imported datablock
     For "Skeleton Match" purposes
+
+    DEPRECATED
     '''
 
     for joint_dict in datablock[0]:
