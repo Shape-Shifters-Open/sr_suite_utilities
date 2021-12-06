@@ -4,15 +4,21 @@
 
 import maya.OpenMayaUI as omui
 import pymel.core as pm
+import sys
 # Trust all the following to ship with Maya.
-from PySide2 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets, QtGui
 from shiboken2 import wrapInstance
+import gc
+
 # From related modules:
 import globals
 import skeleton
 import skinning
 import handles
 import connections
+import dict_lib
+import all_control_options
+
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
 def maya_main_window():
@@ -94,13 +100,40 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.h_input_driven_txtbox.setText("Input Driven Attributes")
         self.get_driven = QtWidgets.QLineEdit(self.connections_tab)
         self.get_driven.move(150, 57)
-        self.get_driven.resize(200, 20)
+        self.get_driven.resize(210, 20)
 
         #    attribute connector button
         self.h_batch_connector_btn = QtWidgets.QPushButton(self.connections_tab)
         self.h_batch_connector_btn.setText("Connect Attributes")
 
+        # Controls tab
+        self.controls_tab = QtWidgets.QWidget()
+        self.tools_tab.addTab(self.controls_tab, "Controls")
+        self.h_swap_control_btn = QtWidgets.QPushButton(self.controls_tab)
+        self.h_swap_control_btn.setText("Swap Shape")
+        #self.h_swap_control_btn.resize(370, 20)
 
+        #     add control shape options
+
+
+        self.shape_options = QtWidgets.QComboBox(self.controls_tab)
+        self.shape_options.move(10, 81)
+        self.shape_options.resize(200, 30)
+        self.shape_options.setStyleSheet("border: 3px solid blue; border-right-width: 0px;")
+        all_options = dict_lib.controls()
+        for key in all_options:
+            self.shape_options.addItem(key)
+
+        self.h_control_selection_btn = QtWidgets.QPushButton(self.controls_tab)
+        self.h_control_selection_btn.setText("Set Control Shape")
+        self.control_selection = self.shape_options.currentText()
+        self.h_control_selection_btn.move(200, 81)
+        self.h_control_selection_btn.resize(150, 30)
+        self.h_control_selection_btn.setStyleSheet("border: 3px solid blue;border-left-width: 0px;")
+
+        #     add colour options
+        self.h_color_options_btn = QtWidgets.QPushButton(self.controls_tab)
+        self.h_color_options_btn.setText("Colour Options")
 
 
 
@@ -137,6 +170,15 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         connections_tab_layout.addRow(self.h_input_driven_txtbox)
         connections_tab_layout.addRow(self.h_batch_connector_btn)
 
+        # Create Controls Tab layout:
+        controls_tab_layout = QtWidgets.QFormLayout(self.controls_tab)
+        controls_tab_layout.addRow(self.h_color_options_btn)
+        controls_tab_layout.addRow(self.h_swap_control_btn)
+
+
+
+
+
 
 
     def create_connections(self):
@@ -150,9 +192,10 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.get_driver.text()
         self.get_driven.text()
         self.h_batch_connector_btn.clicked.connect(self.ui_batch_connect)
-
-
-
+        self.h_swap_control_btn.clicked.connect(self.ui_swap_controls)
+        self.shape_options.currentText()
+        self.h_control_selection_btn.clicked.connect(self.ui_control_options)
+        self.h_color_options_btn.clicked.connect(self.ui_colour_options)
 
 
     # UI commands:
@@ -190,14 +233,32 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         #uses input attributes for parameters
         connections.batch_connect(str(self.get_driver.text()), str(self.get_driven.text()))
 
+    def ui_swap_controls(self):
+        print ("UI call for swapping control shape")
+        all_control_options.swap_shape()
+
+    def ui_control_options(self):
+        print ("UI call for picking control")
+        all_control_options.pick_control(self.shape_options.currentText())
+
+    def ui_colour_options(self):
+        print ("UI call for picking colour")
+        all_control_options.pick_colour()
+
 
     
 def run():
-    try:
-        srsu_main_dialog.close()
-        srsu_main_dialog.deleteLater()
-    except:
-        pass
+    """displays windows"""
+
+    for obj in gc.get_objects():
+        #checks all objects in scene and verifies whether an instance of the window exists
+
+        if isinstance(obj, MainDialog):
+            print "checking for instances"
+            obj.close()
+
 
     srsu_main_dialog = MainDialog()
+
+    #shows window
     srsu_main_dialog.show(dockable=True, floating=True)
