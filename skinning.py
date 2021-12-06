@@ -49,7 +49,7 @@ def copy_skinweights(source="", target=""):
         print ("Copying skin influences to {}".format(geo))
         
         try:
-            pm.skinCluster(geo.name(), joints, omi=True, tsb=True)
+            pm.skinCluster(geo.name(), joints, omi=False, tsb=True)
         except:
             print ("{} already has a skinCluster on it...".format(geo.name()))
             pb.update_progbar()

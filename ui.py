@@ -16,6 +16,7 @@ import skeleton
 import skinning
 import handles
 import connections
+import orientation
 import dict_lib
 import all_control_options
 
@@ -55,6 +56,8 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.tools_tab.addTab(self.skeleton_tab, "Skeleton")
         self.jfc_btn = QtWidgets.QPushButton(self.skeleton_tab)
         self.jfc_btn.setText("Joint from Components")
+        self.smart_copy_orient_btn = QtWidgets.QPushButton(self.skeleton_tab)
+        self.smart_copy_orient_btn.setText("Smart Copy Orientation")
 
         # Skinning Tab:
         self.skin_tab = QtWidgets.QWidget()
@@ -150,6 +153,7 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         # Create the skeleton tab layout:
         skeleton_tab_layout = QtWidgets.QFormLayout(self.skeleton_tab)
         skeleton_tab_layout.addRow(self.jfc_btn)
+        skeleton_tab_layout.addRow(self.smart_copy_orient_btn)
 
         # Create the skinning tab layout:
         skin_tab_layout = QtWidgets.QFormLayout(self.skin_tab)
@@ -183,6 +187,7 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
     def create_connections(self):
         self.jfc_btn.clicked.connect(self.ui_joint_from_component)
+        self.smart_copy_orient_btn.clicked.connect(self.ui_smart_copy_orient)
         self.harden_btn.clicked.connect(self.ui_harden_skin)
         self.copy_sw_btn.clicked.connect(self.ui_copy_skinweights)
         self.find_rs_btn.clicked.connect(self.ui_find_related_cluster)
@@ -203,6 +208,10 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
     def ui_joint_from_component(self):
         print ("UI call for skeleton.joint_from_components()")
         skeleton.joint_from_components()
+
+    def ui_smart_copy_orient(self):
+        print("UI call to orientation.smart_copy_orient()")
+        orientation.smart_copy_orient()
 
     def ui_harden_skin(self):
         print ("UI call for skinning.harden()")

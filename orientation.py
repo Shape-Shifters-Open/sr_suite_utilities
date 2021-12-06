@@ -7,74 +7,226 @@ module for altering the orientation of bones based on mapping swaps.
 import pymel.core as pm
 import pymel.core.datatypes as dt
 
-def swap_axis(subject, swap_map, orient_joint=False):
+
+def smart_copy_orient(subject=None, target=None, s_child=None, t_child=None, reparent=True):
     '''
-    Given the target axis that represents the new way it should be oriented, shuffled the contents 
-    of the matrix
+    'smartly' copies the orientation from one joint to another, preserving the actual orientation by
+    degrees, but fully re-aligning the axial orientation.
+
+    Usage:
+    smart_copy_orient(subject=(PyNode), target=(PyNode))
+    subject - the joint upon which to paste the orientation
+    target - the joint from which to copy the orientation from    
     '''
+
+    if(subject == None or target == None):
+        selection = pm.ls(sl=True)
+        if(len(selection) != 2):
+            pm.error("Must select exactly two joints for this operation.")
+        else:
+            subject = selection[0]
+            target = selection[1]
+
+    # The angle-discovering and comparing operations that make this possible:
+    # Step one, find the 'down' vector-- the vector that points to the child joint and record the 
+    # "swap"
+    s_down_vec = find_down_axis(subject, child_name=s_child)
+    t_down_vec = find_down_axis(target, child_name=t_child)
+
+    if(s_down_vec == None or t_down_vec == None):
+        if(s_child==None or t_child==None):
+            pm.error("There's no child joint to derive a down vector from on one or both {} and {}"
+            .format(subject, target))
+
+    # Get the child to peform the deparent:
+    if(reparent):
+        if(t_child is None):
+            print("Finding child...")
+            child_joint =pm.listRelatives(target, c=True)[0]
+        else:
+            child_joint = pm.PyNode(t_child)
+        print("Deparenting {}".format(child_joint))
+        pm.parent(child_joint, w=True, a=True)
+
+    down_swap = (s_down_vec[0], t_down_vec[0])
+
+    # Step two, find the closest matching angles between the source and target, while excluding the 
+    # down angles:
+    side_swap = closest_axis(subject, target, s_exclude_axis=down_swap[0], 
+        t_exclude_axis=down_swap[1])[:2]
+
+    # Finally, knowing the swappable match facing down/aim, and the swappable match that is used as
+    # an "up vector", perform the swap by deconstructing and re-constructing the matrix:
+    swap_axis(target, aim_swap=down_swap, up_swap=side_swap, orient_joint=True)
+
+    if(reparent):
+        pm.parent(child_joint, target, a=True)
+
+    return
+
+
+def dumb_copy_orient(subject=None, target=None):
+    '''
+    Given a target pynode and a subject pynode (Or selections), match the orientation of the target 
+    with the subjects.
+    '''
+
+    if(subject == None or target == None):
+        selection = pm.ls(sl=True)
+        if(len(selection) != 2):
+            pm.error("Must select exactly two joints for this operation.")
+        else:
+            subject = selection[0]
+            target = selection[1]
+
+    copied_matrix = subject.getMatrix(worldSpace=True)
+    target.setMatrix(copied_matrix, worldSpace=True)
+
+
+def swap_axis(subject, aim_swap, up_swap, orient_joint=False, parent_safe=True):
+    '''
+    Given the target axis that represents the new way it should be oriented, shuffle the contents 
+    of the matrix such that the alignment's axis can be switched
+    '''
+
+    # Swap relationships come in as tuples-- the second index being the axis to be replaced, and the 
+    # first being the axis to replace it with.  We assign the xfor, yfor, zfor vars we use later
+    # based on these tuples.
+    xfor = yfor = zfor = None
+    if(aim_swap[1] == 'x'):
+        xfor = aim_swap[0]
+    elif(aim_swap[1] == 'y'):
+        yfor = aim_swap[0]
+    elif(aim_swap[1] == 'z'):
+        zfor = aim_swap[0]
+
+    if(up_swap[1] == 'x'):
+        xfor = up_swap[0]
+    if(up_swap[1] == 'y'):
+        yfor = up_swap[0]
+    if(up_swap[1] == 'z'):
+        zfor = up_swap[0]
+
+    # After the shuffling has been done from the tuples to the 'fors', we can sanitize we got enough
+    # axis specified.  Without enough swaps to derive a full 4x4 matrix, we throw an error.
+    axis_count = 0
+    if(xfor != None):
+        axis_count += 1
+    if(yfor != None):
+        axis_count += 1
+    if(zfor != None):
+        axis_count += 1
+
+    if(axis_count < 2):
+        pm.error(
+            "Not enough swap axis were specified.  Use at least two of xfor, yfor, zfor arguments"
+            )
+        return
 
     # If the node is a joint, begin the process by moving joint orientation to eular rotations
     if(orient_joint):
         subject.rotate.set(subject.jointOrient.get())
         subject.jointOrient.set(0,0,0)
 
-    s_matrix = subject.getMatrix()  
+    s_matrix = subject.getMatrix(worldSpace=True)  
     s_translate = dt.Vector(s_matrix.translate)
 
     fresh_matrix = dt.Matrix()
 
-    s_x_rot = dt.Vector(s_matrix[0][:3])
-    s_y_rot = dt.Vector(s_matrix[1][:3])
-    s_z_rot = dt.Vector(s_matrix[2][:3])
+    # Populate the source vectors with the contents of the source matrix.
+    s_x_vec = dt.Vector(s_matrix[0][:3])
+    s_y_vec = dt.Vector(s_matrix[1][:3])
+    s_z_vec = dt.Vector(s_matrix[2][:3])
 
-    # Vector replacements case by case.
-    if(swap_map[0] == 'x'):
-        m0 = list(s_x_rot.get())
-    elif(swap_map[0] == '-x'):
-        m0 = list(-s_x_rot.get())
-    elif(swap_map[0] == 'y'):
-        m0 = list(s_y_rot.get())
-    elif(swap_map[0] == '-y'):
-        m0 = list(-s_y_rot.get())
-    elif(swap_map[0] == 'z'):
-        m0 = list(s_z_rot.get())
-    elif(swap_map[0] == '-z'):
-        m0 = list(-s_z_rot.get())
+    # Initialize the target vectors as None, so that we can discover which one should be a cross
+    # product on account of being left out by the "x/y/zfor" flags.
+    t_x_vec = None
+    t_y_vec = None
+    t_z_vec = None
+
+    # Vector replacements, case by case.
+    if(xfor == None):
+        pass
+    elif(xfor == 'x'):
+        t_x_vec = s_x_vec
+    elif(xfor == 'y'):
+        t_x_vec = s_y_vec
+    elif(xfor == 'z'):
+        t_x_vec = s_z_vec
+    elif(xfor == '-x'):
+        t_x_vec = -s_x_vec
+    elif(xfor == '-y'):
+        t_x_vec = -s_y_vec
+    elif(xfor == '-z'):
+        t_x_vec = -s_z_vec
     else:
-        pm.error("Bad X input string for new-axis mapping")
+        pm.error("Bad input for xfor flag; must be a letter axis x y z, or -x,-y,-z.")
+        return
 
-    if(swap_map[1] == 'x'):
-        m1 = list(s_x_rot.get())
-    elif(swap_map[1] == '-x'):
-        m1 = list(-s_x_rot.get())
-    elif(swap_map[1] == 'y'):
-        m1 = list(s_y_rot.get())
-    elif(swap_map[1] == '-y'):
-        m1 = list(-s_y_rot.get())
-    elif(swap_map[1] == 'z'):
-        m1 = list(s_z_rot.get())
-    elif(swap_map[1] == '-z'):
-        m1 = list(-s_z_rot.get())
+    if(yfor == None):
+        pass
+    elif(yfor == 'x'):
+        t_y_vec = s_x_vec
+    elif(yfor == 'y'):
+        t_y_vec = s_y_vec
+    elif(yfor == 'z'):
+        t_y_vec = s_z_vec
+    elif(yfor == '-x'):
+        t_y_vec = -s_x_vec
+    elif(yfor == '-y'):
+        t_y_vec = -s_y_vec
+    elif(yfor == '-z'):
+        t_y_vec = -s_z_vec
     else:
-        pm.error("Bad Y input string for new-axis mapping")
-
-    if(swap_map[2] == 'x'):
-        m2 = list(s_x_rot.get())
-    elif(swap_map[2] == '-x'):
-        m2 = list(-s_x_rot.get())
-    elif(swap_map[2] == 'y'):
-        m2 = list(s_y_rot.get())
-    elif(swap_map[2] == '-y'):
-        m2 = list(-s_y_rot.get())
-    elif(swap_map[2] == 'z'):
-        m2 = list(s_z_rot.get())
-    elif(swap_map[2] == '-z'):
-        m2 = list(-s_z_rot.get())
+        pm.error("Bad input for yfor flag; must be a letter axis x y z, or -x,-y,-z.")
+        return
+    
+    if(zfor == None):
+        pass
+    elif(zfor == 'x'):
+        t_z_vec = s_x_vec
+    elif(zfor == 'y'):
+        t_z_vec = s_y_vec
+    elif(zfor == 'z'):
+        t_z_vec = s_y_vec
+    elif(zfor == '-x'):
+        t_z_vec = -s_x_vec
+    elif(zfor == '-y'):
+        t_z_vec = -s_y_vec
+    elif(zfor == '-z'):
+        t_z_vec = -s_z_vec
     else:
-        pm.error("Bad Z input string for new-axis mapping")
+        pm.error("Bad input for zfor flag; must be a letter axis x y z, or -x,-y,-z.")
+        return
 
-    # Reconstruct the translate values:
-    m3 = list(s_translate.get())
+    # Check which axis is the "None" and derive it with cross products.
+    if(t_x_vec == None):
+        print("X vector for target in this case will be cross product.")
+        t_y_vec.normalize()
+        t_z_vec.normalize()
+        t_x_vec = t_y_vec.cross(t_z_vec)
+        t_x_vec.normalize()
+
+    elif(t_y_vec == None):
+        print("Y vector for target in this case will be cross product.")
+        t_x_vec.normalize()
+        t_z_vec.normalize()
+        t_y_vec = t_x_vec.cross(t_z_vec)
+        t_y_vec.normalize()
+
+    elif(t_z_vec == None):
+        print("Z vector for target in this case will be cross product.")
+        t_x_vec.normalize()
+        t_y_vec.normalize()
+        t_z_vec = t_x_vec.cross(t_y_vec)
+        t_z_vec.normalize()
+
+    # Reconstruct the matrix values:
+    m0 = list(t_x_vec.get())
+    m1 = list(t_y_vec.get())
+    m2 = list(t_z_vec.get())
+
+    m3 = pm.xform(subject, t=True, q=True, ws=True)
     m3.append(1.0)
 
     # Reconstruct the forth column:
@@ -84,11 +236,35 @@ def swap_axis(subject, swap_map, orient_joint=False):
     # Reconstruct the translate
     fresh_matrix = dt.Matrix(m0, m1, m2, m3)
 
+    # Since Maya's own jointOrient command is pretty weak, we will temporarily de-parent things.
+    if(parent_safe):
+        child_list = (
+            [child for child in pm.listRelatives(subject, c=True) 
+            if(child.type() in ['transform', 'joint'])]
+            )
+        print("Got child list:\n{}".format(child_list))
+        if(len(child_list) > 0):
+            for child in child_list:
+                pm.parent(child, w=True)[0]
+        parents = pm.listRelatives(subject, p=True)
+        if(len(parents) == 1):
+            parent_joint = parents[0]
+        else:
+            parent_joint = None
+        pm.parent(subject, w=True)
+
     # Apply the newly constructed matrix
-    subject.setMatrix(fresh_matrix)
+    subject.setMatrix(fresh_matrix, worldSpace=True)
+
+    if(parent_safe):
+        for child in child_list:
+            pm.parent(child, subject)
+        if(parent_joint != None):
+            pm.parent(subject, parent_joint)
 
     # If node is a joint, we need to apply this to the jo values.
     if(orient_joint):
+
         subject.jointOrient.set(subject.rotate.get())
         subject.rotate.set(0, 0, 0)
 
@@ -108,16 +284,16 @@ def find_down_axis(joint_node, child_name=None):
             [child for child in pm.listRelatives(joint_node, c=True) 
             if(child.type() in ['transform', 'joint'])]
             )
-        print("Full child list of {} is {}".format(joint_node, child_list))
 
-        # This process can't work on a multi-child branching joint.  Return a special string to
-        # indicate this.
+        # This process can't ever pick a "favored" child joint if there's more than one-- I've 
+        # chosen to complete crash this process
         if(len(child_list) > 1):
-            return ["MULTI_CHILD", "MULTI_CHILD"] 
-            # I am not thrilled with this scheme for returning joints we should skip.  TODO: make a
-            # Github issue to fix later.
+            pm.error("find_down_axis() won't work on multi-child joints.  {} has {} child joints."
+            .format(joint_node.name(), len(child_list)))
+            return
+
         elif(len(child_list) < 1):
-            return ["ROOT", "ROOT"]
+            return None
         else:
             child = child_list[0]
     else:
@@ -131,18 +307,20 @@ def find_down_axis(joint_node, child_name=None):
 
     # Now that we have the vector pointing to the next joint, which find which part of the matrix
     # has the closest angle to it
-    joint_matrix = joint_node.getMatrix()
+    joint_matrix = joint_node.getMatrix(worldSpace=True)
     # Take apart the matrix into vectors for each axis
-    x_axis = joint_matrix[0][:3]
-    y_axis = joint_matrix[1][:3]
-    z_axis = joint_matrix[2][:3]
+    x_axis = dt.Vector(joint_matrix[0][:3])
+    y_axis = dt.Vector(joint_matrix[1][:3])
+    z_axis = dt.Vector(joint_matrix[2][:3])
 
     # Collect a list of angles betwee existing axis and our "down vector".  The smallest angle will 
     # be from the intended "down axis"
     angle_list = []
     for axis_vec in [x_axis, y_axis, z_axis]:
-        
-        angle_list.append(down_vec.angle(axis_vec))
+        if(down_vec.normal() != axis_vec.normal()):
+            angle_list.append(down_vec.angle(axis_vec))
+        else:
+            angle_list.append(0.0)
     # Get an int 0,1,2 for x,y,z
     smallest_angle = min(angle_list)
     axis_index = angle_list.index(smallest_angle)
@@ -153,19 +331,23 @@ def find_down_axis(joint_node, child_name=None):
     return (axis_strings[axis_index], down_vec)
 
 
-def compare_axis_vector(target_joint, source_joint, exclude_axis=None):
+def closest_axis(source_joint, target_joint, s_exclude_axis=None, t_exclude_axis=None):
     '''
-    Find which axis have similarly parallel alignment between bones, in order to use the
-    this relationship to determine the alignment later.
+    Find which two axis between two joints have similarly parallel alignment between bones, 
+    in order to use this relationship to determine the alignment later.
 
     usage:
-    - target_joint: pynode of the joint we are snapping to.
+    closest_axis(target_joint, source_joint, s_exclude_axis=(string))
+    - target_joint: (pynode) of the joint we are snapping to.
     - source_joint: pynode of the joint we are aligning by.
     - excluse_axis: Char value of the previously determined "down axis" that doesn't need checking.
+
+    returns:
+    (tuple) (closest matching source axis, closest matching target axis, closest target's vector)
     '''
 
-    target_matrix = target_joint.getMatrix()
-    source_matrix = source_joint.getMatrix()
+    target_matrix = target_joint.getMatrix(worldSpace=True)
+    source_matrix = source_joint.getMatrix(worldSpace=True)
 
     target_angles = []
 
@@ -184,35 +366,36 @@ def compare_axis_vector(target_joint, source_joint, exclude_axis=None):
         target_x_axis, target_y_axis, target_z_axis]
 
     axis = ['x', 'y', 'z', '-x', '-y', '-z']
-    if(exclude_axis in axis):
-        print(source_vectors)
-        print("exclusing axis {}".format(axis[axis.index(exclude_axis)]))
-        source_vectors[axis.index(exclude_axis)] = None
-        print(source_vectors)
+
+    # Get the "s_exclude_axis" flag's demands sorted-- a 'None' gets skipped later.
+    if(s_exclude_axis != None):
+        if(s_exclude_axis in axis):
+            source_vectors[axis.index(s_exclude_axis)] = None
+        else:
+            pm.error("Bad string for 's_exlude_axis' flag.  Must be ['x','y','z','-x','-y','-z']")
+
+    if(t_exclude_axis != None):
+        if(t_exclude_axis in axis):
+            target_vectors[axis.index(t_exclude_axis)] = None
+        else:
+            pm.error("Bad string for 's_exlude_axis' flag.  Must be ['x','y','z']")
 
 
     smallest_angle = 360.1
     for s_vector in source_vectors:
-        print (type(s_vector))
+        # Check if this axis has been excluded and continue in that case
         if s_vector is None:
-            print("Axis exclused.")
             continue
         for t_vector in target_vectors:
-            print(
-                "comparing {} to {}".format(axis[target_vectors.index(t_vector)], 
-                axis[source_vectors.index(s_vector)])
-                )
-            print("    angle is {}".format(s_vector.angle(t_vector)))
+            if(t_vector == None):
+                continue
             if(s_vector.angle(t_vector) < smallest_angle):
                 smallest_angle = s_vector.angle(t_vector)
                 t_match_axis = axis[target_vectors.index(t_vector)]
                 s_match_axis = axis[source_vectors.index(s_vector)]
                 t_match_vec = s_vector
-                print("     new smallest angle is {}".format(smallest_angle))
 
-    print("Best matched axis is source's {} to target's {}".format(s_match_axis, t_match_axis))
-
-    return (s_match_axis, t_match_vec)
+    return (s_match_axis, t_match_axis, t_match_vec)
 
 
 def aim_at(node, target=None, vec=None, pole_vec=(0,1,0), axis=0, pole=1):
@@ -257,8 +440,6 @@ def aim_at(node, target=None, vec=None, pole_vec=(0,1,0), axis=0, pole=1):
     if(target_vec == pole_vec):
         pm.error("sr_biped error: Target vector and pole vector are identical-- result will be "
             "unsafe.")
-
-    print(target_vec)
 
     # Step two, "unconstrained" vec; cross product of normalized vector and normalized pole vector 
     # is found and stored.
@@ -329,83 +510,7 @@ def aim_at(node, target=None, vec=None, pole_vec=(0,1,0), axis=0, pole=1):
     # Step four, apply the values of each vector to the correct place in the matrix.
     aimed_matrix = dt.Matrix(m0, m1, m2, m3)
 
-    node.setMatrix(aimed_matrix)
-
-    print(aimed_matrix.formated())
-
-    return
-
-
-def trans_align(orient, orient_like, source_child=None):
-    '''
-    Given a transform node that is oriented a certain way, and a comparitive transform node that is
-    not oriented alike, take the "major axis orientation" and apply it to the first node without 
-    changing the finer details of it's orientation-- essentially, keep the orientation but swap 
-    the chosen axis used in the orientation.
-
-    This is a long process-- see find_down_axis and compare_axis_vector.  The process essentially
-    identifies the "down axis" as something to aim at, and the compare_axis_vector decides on the 
-    pole axis, and a matrix-edit orients it using those two axis with old vectors given new matrix
-    positions.
-
-    orient - transform node to orient
-    orient_like - transform node to emulator the axis-orientation of
-    source_child - optional string to identify the orient_like node in the case that where it should
-        aim is not presently it's child (corner case that comes from skeleton match.)   
-    '''
-
-    pm.select(clear=True)
-
-    print("Axis aligning {} to {}".format(orient, orient_like))
-
-    # Find the down vector of orient
-    target_down_vec = find_down_axis(orient)[1]
-    if(target_down_vec in ['ROOT', 'MULTI_CHILD']):
-        print("Can't orient {}, as it's {}".format(orient_like, target_down_vec))
-        return
- 
-    # Find the down axis of the source
-    if(source_child == None):
-        source_down_axis = find_down_axis(orient_like)[0]
-    else:
-        source_down_axis = find_down_axis(orient_like, source_child)
-    
-    print(
-        "'down joint' vector on our skeleton is {}, replacing with theirs; {}".format(
-            target_down_vec, source_down_axis
-            )
-        )
-
-    print("Working out a pole vector by choosing near-match axis...")
-    # Find "next best" axis to use as a pole
-    source_match_axis, target_match_vec = compare_axis_vector(
-        orient, orient_like, exclude_axis=source_down_axis[0]
-        )
-
-    # Turn axis strings into ints:
-    axis = ['x', 'y', 'z']
-    print("SOURCED DOWN AXIS IS {}".format(source_down_axis[0]))
-    aim_axis = axis.index(source_down_axis[0])
-
-    if('-' in source_down_axis[0]):
-        print("This down axis is reversed.  Altering the axis string to treat it as normal now.")
-        source_down_axis[0].replace('-', '')
-
-    if('-' in source_match_axis):
-        print("This pole axis is reversed.  Altering the axis string to treat it as normal now.")
-        print(source_match_axis)
-        source_match_axis = source_match_axis.replace('-', '')
-        print(source_match_axis)
-
-    pole_axis = axis.index(source_match_axis)
-
-    # Now at this point, we have a vector to aim at and a pole, and we know which to make which.
-    try:
-        aim_at(
-            orient, vec=target_down_vec, pole_vec=target_match_vec, axis=aim_axis, pole=pole_axis
-            )
-    except:
-        print("WARNING COULDN'T AIM--- IS IT BECAUSE OF THE NEGATIVE NOT BEING EXCLUDED?")
+    node.setMatrix(aimed_matrix, worldSpace=True)
 
     return
 

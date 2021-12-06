@@ -37,6 +37,8 @@ def import_skeleton(file_path):
 					skel_node_data.append(node_data)
 				if dups:
 					duplicate_names.append(dups)
+
+				print(node_data)
 			except:
 				continue
 
