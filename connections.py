@@ -45,3 +45,29 @@ def connect_xforms(source=None, target=None, trans=True, rot=True, scale=False):
             source.scale >> node.scale
 
     return
+
+
+def batch_connect(driver_attr = None, driven_attr = None):
+    """takes input driver attr and driven attr and batch connects them.
+    Select the driver as your first object and shift select all the driven objects with it.
+    usage:
+    batch_connect(driver_attr=[Pynode or string], driven_attr=[PyNode or string])
+
+    Defaults is "None" for driver_attr and driven_attr, if either isn't specified function will fall back on
+    viewport selection.
+    """
+
+    # makes a string of driven objects
+    all_objects = pm.ls(selection=True)
+    driver = all_objects[0]
+    all_objects.remove(driver)
+
+    # splits all attributes to be connected into list
+    all_driven_attr = driven_attr.split(" ")
+
+    # connects driver to all driven objects
+    for object in all_objects:
+
+        # connects driver to individual given attribute of each driven object
+        for attr in all_driven_attr:
+            pm.connectAttr(driver + '.' + driver_attr, object + '.' + attr, force=True)
