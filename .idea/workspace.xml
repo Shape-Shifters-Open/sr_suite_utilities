@@ -4,8 +4,6 @@
     <list default="true" id="47120b76-8a5f-45b0-ba81-f79e285a9553" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/all_control_options.py" beforeDir="false" afterPath="$PROJECT_DIR$/all_control_options.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dict_lib.py" beforeDir="false" afterPath="$PROJECT_DIR$/dict_lib.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -15,10 +13,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ui.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1411">
+            <state relative-caret-position="286">
               <caret line="251" lean-forward="true" selection-start-line="251" selection-end-line="251" />
               <folding>
                 <element signature="e#498#607#0" />
@@ -60,11 +58,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/all_control_options.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="675">
-              <caret line="39" column="36" selection-start-line="39" selection-start-column="36" selection-end-line="39" selection-end-column="36" />
+            <state relative-caret-position="250">
+              <caret line="43" lean-forward="true" selection-start-line="43" selection-end-line="43" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -115,8 +113,8 @@
       <list>
         <option value="$PROJECT_DIR$/controls.py" />
         <option value="$PROJECT_DIR$/dict_lib.py" />
-        <option value="$PROJECT_DIR$/all_control_options.py" />
         <option value="$PROJECT_DIR$/ui.py" />
+        <option value="$PROJECT_DIR$/all_control_options.py" />
       </list>
     </option>
   </component>
@@ -308,16 +306,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/all_control_options.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="675">
-          <caret line="39" column="36" selection-start-line="39" selection-start-column="36" selection-end-line="39" selection-end-column="36" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/connections.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-300" />
@@ -332,10 +320,20 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/ui.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1411">
+        <state relative-caret-position="286">
           <caret line="251" lean-forward="true" selection-start-line="251" selection-end-line="251" />
           <folding>
             <element signature="e#498#607#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/all_control_options.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="250">
+          <caret line="43" lean-forward="true" selection-start-line="43" selection-end-line="43" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
           </folding>
         </state>
       </provider>

@@ -42,6 +42,13 @@ def pick_control(control_selected):
     #takes selection of controls to be changed
     cur_curve = pm.ls(selection=True)
 
+    #checks if selection is appropriate
+    for ctrl in cur_curve:
+        if pm.nodeType(ctrl) != "transform":
+            pm.error("please select a transform node")
+            break
+
+
     #create swappable curve - this is a test - works with ring and plus
 
     new_curve = pm.curve(per=dict_lib.controls_dict[control_selected]['per'],
