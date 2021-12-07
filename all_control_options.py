@@ -11,7 +11,7 @@ Will add a size option"""
 
 def swap_shape():
     """takes first selected shape and swaps the other shapes to match it"""
-    print "testing shape swap"
+    print "swapping shape"
 
     #takes selection of controls for swap
     all_controls = pm.ls(selection = True)
@@ -19,22 +19,25 @@ def swap_shape():
     #establishes original control shape
     orig_ctrl = all_controls[0]
     all_controls.remove(orig_ctrl)
-    orig_shape = orig_ctrl.getShape()
-    print("The shape node is {} and it's type {}".format(orig_shape.name(), type(orig_shape)))
+
+    new_control = pm.duplicate(orig_ctrl, rr = True)[0]
+    new_shape = new_control.getShape()
+    print("The shape node is {} and it's type {}".format(new_shape.name(), type(new_shape)))
 
     #swaps individual shapes
     for ctrl in all_controls:
+
         current_shape = ctrl.getShape()
-        pm.parent(orig_shape, ctrl, s=True, r=True)
+        pm.parent(new_shape, ctrl, s=True, r=True)
 
         pm.delete(current_shape)
-
+    pm.delete(new_control)
 
 
 
 def pick_control(control_selected):
     """changes control shape to chosen shape"""
-    print "testing control picker"
+    print "displaying control picker"
 
     #takes selection of controls to be changed
     cur_curve = pm.ls(selection=True)
@@ -55,7 +58,12 @@ def pick_control(control_selected):
 
 
 def set_colour():
+    """provides selection window for colour"""
+
+    #creates qolor window
     qcolor = QtWidgets.QColorDialog().getColor()
+
+    #checks colour an sets up rgb for maya
     if qcolor.isValid():
         new = qcolor.getRgb()
         colors = [new[0] * 0.001, new[1] * 0.001, new[2] * 0.001]
@@ -64,12 +72,18 @@ def set_colour():
     return colors
 
 def pick_colour():
+    """ sets the control colour based on selection"""
+
+    #takes in control selection for colour change
     ctrl = pm.ls(selection=True)
     colors_list = set_colour()
+
+    #assigns rgb values
     r_value = colors_list[0]
     g_value = colors_list[1]
     b_value = colors_list[2]
 
+    #updates each control
     for each_ctrl in ctrl:
         pm.setAttr(each_ctrl + ".overrideEnabled", 1)
         pm.setAttr(each_ctrl + ".overrideRGBColors", 1)

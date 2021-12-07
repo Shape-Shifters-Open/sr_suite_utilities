@@ -4,9 +4,12 @@
 
 import maya.OpenMayaUI as omui
 import pymel.core as pm
+import sys
 # Trust all the following to ship with Maya.
-from PySide2 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets, QtGui
 from shiboken2 import wrapInstance
+import gc
+
 # From related modules:
 import globals
 import skeleton
@@ -97,7 +100,7 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.h_input_driven_txtbox.setText("Input Driven Attributes")
         self.get_driven = QtWidgets.QLineEdit(self.connections_tab)
         self.get_driven.move(150, 57)
-        self.get_driven.resize(200, 20)
+        self.get_driven.resize(210, 20)
 
         #    attribute connector button
         self.h_batch_connector_btn = QtWidgets.QPushButton(self.connections_tab)
@@ -111,13 +114,12 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         #self.h_swap_control_btn.resize(370, 20)
 
         #     add control shape options
-        self.h_control_shapes_txtbox = QtWidgets.QLabel(self.controls_tab)
-        self.h_control_shapes_txtbox.setText("Control Shapes")
-        self.h_control_shapes_txtbox.move(0, 36)
-        self.h_control_shapes_txtbox.resize(200, 20)
+
+
         self.shape_options = QtWidgets.QComboBox(self.controls_tab)
-        self.shape_options.move(150, 36)
-        self.shape_options.resize(200, 20)
+        self.shape_options.move(10, 81)
+        self.shape_options.resize(200, 30)
+        self.shape_options.setStyleSheet("border: 3px solid blue; border-right-width: 0px;")
         all_options = dict_lib.controls()
         for key in all_options:
             self.shape_options.addItem(key)
@@ -125,6 +127,9 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.h_control_selection_btn = QtWidgets.QPushButton(self.controls_tab)
         self.h_control_selection_btn.setText("Set Control Shape")
         self.control_selection = self.shape_options.currentText()
+        self.h_control_selection_btn.move(200, 81)
+        self.h_control_selection_btn.resize(150, 30)
+        self.h_control_selection_btn.setStyleSheet("border: 3px solid blue;border-left-width: 0px;")
 
         #     add colour options
         self.h_color_options_btn = QtWidgets.QPushButton(self.controls_tab)
@@ -167,10 +172,11 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
         # Create Controls Tab layout:
         controls_tab_layout = QtWidgets.QFormLayout(self.controls_tab)
-        controls_tab_layout.addRow(self.h_swap_control_btn)
-        controls_tab_layout.addRow(self.h_control_shapes_txtbox)
-        controls_tab_layout.addRow(self.h_control_selection_btn)
         controls_tab_layout.addRow(self.h_color_options_btn)
+        controls_tab_layout.addRow(self.h_swap_control_btn)
+
+
+
 
 
 
@@ -190,9 +196,6 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.shape_options.currentText()
         self.h_control_selection_btn.clicked.connect(self.ui_control_options)
         self.h_color_options_btn.clicked.connect(self.ui_colour_options)
-
-
-
 
 
     # UI commands:
@@ -245,11 +248,17 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
     
 def run():
-    try:
-        srsu_main_dialog.close()
-        srsu_main_dialog.deleteLater()
-    except:
-        pass
+    """displays windows"""
+
+    for obj in gc.get_objects():
+        #checks all objects in scene and verifies whether an instance of the window exists
+
+        if isinstance(obj, MainDialog):
+            print "checking for instances"
+            obj.close()
+
 
     srsu_main_dialog = MainDialog()
+
+    #shows window
     srsu_main_dialog.show(dockable=True, floating=True)
