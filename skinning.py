@@ -259,6 +259,10 @@ def write_skin_info():
         file_path = ('{}/{}.json'.format(folder_path, item))
 
         skin_cluster = find_related_skinCluster(node=item)
+        if(skin_cluster is None):
+            pm.warning("Check that {} has a skin cluster attached.".format(item.name()))
+            return None
+        
         print (skin_cluster)
         new_skin_name = ('{}_skinCluster'.format(item.name()))
         try:
@@ -272,11 +276,11 @@ def write_skin_info():
 
         for vertex in vertex_list:
             test_dict2 = {}
-            InfluenceList = pm.skinCluster(new_skin_name, inf=True, q=True)
+            inf_list = pm.skinCluster(new_skin_name, inf=True, q=True)
             value = pm.skinPercent(new_skin_name, str(vertex), q=True, value=True)
-            for index in enumerate(InfluenceList):
+            for index in enumerate(inf_list):
                 joint_number = index[0]
-                joint_name = index[1]
+                joint_name = index[1].name() # Using name() to prevent serializing a PyNode.
                 value_number = value[joint_number]
                 if value_number == 0:
                     pass
