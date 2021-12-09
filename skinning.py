@@ -6,6 +6,9 @@ import pymel.core as pm
 import progbar as pb
 import skeleton as sk
 import maya.mel as mel
+import file_ops as fo
+import os
+import json
 
 
 def copy_skinweights(source="", target=""):
@@ -86,7 +89,11 @@ def find_related_skinCluster(node=None):
     if(node == None):
         select_mode = True
         print ("Running the UI version of this command, return value will be selected.")
-        node = pm.ls(sl=True)[0]
+        selection = pm.ls(sl=True)
+        if(len(selection) == 0):
+            pm.warning ("Nothing was selected.")
+            return
+        node = selection[0]
 
     print ("Checking {}'s connections...".format(node))
     skin_cluster = None
@@ -96,6 +103,9 @@ def find_related_skinCluster(node=None):
             skin_cluster = nodes
             break
 
+    if (skin_cluster is None):
+        pm.warning("{} has no skincluster attached.".format(node.name()))
+        return None
 
     if(select_mode):
         pm.select(skin_cluster)
@@ -224,3 +234,98 @@ def rip_skin(source_mesh=None, target_mesh=None):
             
     # Now new_joint and old_joints should have contents with the same names... let's check how much
     # they do or do not match.
+
+
+def write_skin_info():
+    get_path = fo.prompt_for_filepath(0, ext="Skin Weight JSON (*.json)")
+    file_name = get_path.split('/')[-1]
+    folder_path = get_path.replace(file_name, 'weights')
+
+
+    if os.path.exists(folder_path):
+        print ('weights folder already exists')
+    else:
+        os.makedirs(folder_path)
+        print ('weights folder created')
+
+    mesh_selection_list = pm.ls(sl=True)
+
+    if(not mesh_selection_list):
+        pm.error("Nothing was selected.")
+        return
+
+    for item in mesh_selection_list:
+
+        file_path = ('{}/{}.json'.format(folder_path, item))
+
+        skin_cluster = find_related_skinCluster(node=item)
+        print (skin_cluster)
+        new_skin_name = ('{}_skinCluster'.format(item.name()))
+        try:
+            pm.rename(skin_cluster, new_skin_name)
+        except:
+            pass
+        vertex_amount = (pm.polyEvaluate(v=True) - 1)
+        vertex_list = pm.ls('{}.vtx[0:{}]'.format(item, vertex_amount), fl=True)
+
+        test_dict1 = {}
+
+        for vertex in vertex_list:
+            test_dict2 = {}
+            InfluenceList = pm.skinCluster(new_skin_name, inf=True, q=True)
+            value = pm.skinPercent(new_skin_name, str(vertex), q=True, value=True)
+            for index in enumerate(InfluenceList):
+                joint_number = index[0]
+                joint_name = index[1]
+                value_number = value[joint_number]
+                if value_number == 0:
+                    pass
+                else:
+                    test_dict1.setdefault(str(vertex), [])
+                    test_dict2.setdefault(joint_name, value_number)
+            test_dict1[str(vertex)].append(test_dict2)
+
+        print ("> write to json file is seeing: {}".format(file_path))
+
+        with open(file_path, "w") as jsonFile:
+            json.dump(test_dict1, jsonFile, indent=4)
+
+        print ("Data was successfully written to {}".format(file_path))
+
+    return
+
+
+def readSkinningInformation():
+    mesh_selection_list = pm.ls(sl=True)
+
+    for item in mesh_selection_list:
+
+        get_path = cmds.file(q=True, loc=True)
+        file_name = get_path.split('/')[-1]
+        folder_path = get_path.replace(file_name, 'weights')
+        file_path = ('{}/{}.json'.format(folder_path, item))
+
+        with open(file_path, 'r') as jsonFile:
+            meshWeights_dict = json.load(jsonFile)
+
+            skin_cluster = mel.eval('findRelatedSkinCluster ' + str(item))
+            if skin_cluster == '':
+                pm.skinCluster('root', item, n='{}_skinCluster'.format(item), mi=8, omi=True)
+                print 'yes'
+            else:
+                new_skin_name = '{}_skinCluster'.format(item)
+                try:
+                    pm.rename(skin_cluster, new_skin_name)
+                except:
+                    pass
+
+            for key in meshWeights_dict.keys():
+                skin_list = []
+                for vertex_values in meshWeights_dict[key]:
+                    for joint_keys in vertex_values.keys():
+                        vertex_values[joint_keys]
+                        skin_list.append((joint_keys, vertex_values[joint_keys]))
+
+                pm.skinPercent('{}_skinCluster'.format(item), key, tv=skin_list)
+
+        print 'YO THAT FILE DONT EXIST'
