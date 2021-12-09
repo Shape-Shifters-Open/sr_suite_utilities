@@ -116,7 +116,9 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.h_swap_control_btn.setText("Swap Shape")
         #self.h_swap_control_btn.resize(370, 20)
 
-        #     add control shape options
+        # Transforms tab
+        self.trans_tab = QtWidgets.QWidget()
+        self.tools_tab.addTab(self.trans_tab, "Transforms")
 
 
         self.shape_options = QtWidgets.QComboBox(self.controls_tab)
