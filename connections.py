@@ -71,3 +71,4 @@ def batch_connect(driver_attr = None, driven_attr = None):
         # connects driver to individual given attribute of each driven object
         for attr in all_driven_attr:
             pm.connectAttr(driver + '.' + driver_attr, object + '.' + attr, force=True)
+
