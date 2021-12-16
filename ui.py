@@ -2,6 +2,7 @@
 # Matt Riche 2021
 # Shaper Rigs in-suite UI.
 
+from pymel.core.datatypes import Vector
 import maya.OpenMayaUI as omui
 import pymel.core as pm
 import sys
@@ -28,6 +29,8 @@ def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()
     return wrapInstance(long(main_window_ptr), QtWidgets.QWidget)
 
+    return
+
 
 class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
@@ -43,6 +46,9 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.create_widgets()
         self.create_layouts()
         self.create_connections()
+
+        return
+
 
     def create_widgets(self):
         # Prep tabs:
@@ -157,53 +163,57 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
         #     adding pole vector label
         self.h_input_pv_label = QtWidgets.QLabel(self.transforms_tab)
-        self.h_input_pv_label.setText("Pole Vector")
+        self.h_input_pv_label.setText("Up Vector:")
         self.h_input_pv_label.move(45, 36)
         self.h_input_pv_label.resize(80, 20)
 
         #     adding float input dialog
         self.h_input_pv_x = QtWidgets.QLineEdit(self.transforms_tab)
-        self.h_input_pv_x.move(110, 36)
+        self.h_input_pv_x.move(100, 36)
         self.h_input_pv_x.resize(30, 20)
         self.h_input_pv_x.setText("0.0")
         self.h_input_pv_y = QtWidgets.QLineEdit(self.transforms_tab)
         self.input_y = self.h_input_pv_y.text()
-        self.h_input_pv_y.move(140, 36)
+        self.h_input_pv_y.move(130, 36)
         self.h_input_pv_y.resize(30, 20)
-        self.h_input_pv_y.setText("0.1")
+        self.h_input_pv_y.setText("1.0")
         self.h_input_pv_z = QtWidgets.QLineEdit(self.transforms_tab)
         self.input_z = self.h_input_pv_z.text()
-        self.h_input_pv_z.move(170, 36)
+        self.h_input_pv_z.move(160, 36)
         self.h_input_pv_z.resize(30, 20)
         self.h_input_pv_z.setText("0.0")
 
         #     adding vector combobox label
         self.h_vector_label = QtWidgets.QLabel(self.transforms_tab)
-        self.h_vector_label.setText("Vector")
-        self.h_vector_label.move(205, 36)
+        self.h_vector_label.setText("Aimed Axis:")
+        self.h_vector_label.move(190, 36)
         self.h_vector_label.resize(80, 20)
 
         #     adding vector combobox
         self.vector_enum = QtWidgets.QComboBox(self.transforms_tab)
-        self.vector_enum.move(240, 36)
-        self.vector_enum.resize(40, 20)
+        self.vector_enum.move(250, 36)
+        self.vector_enum.resize(33, 20)
         self.vector_enum.addItem('x')
         self.vector_enum.addItem('y')
         self.vector_enum.addItem('z')
 
         #     adding up vector label
         self.h_up_vector_label = QtWidgets.QLabel(self.transforms_tab)
-        self.h_up_vector_label.setText("Up Vector")
-        self.h_up_vector_label.move(280, 36)
+        self.h_up_vector_label.setText("Up Axis:")
+        self.h_up_vector_label.move(285, 36)
         self.h_up_vector_label.resize(80, 20)
 
         #     adding up vector combobox
         self.up_vector_enum = QtWidgets.QComboBox(self.transforms_tab)
-        self.up_vector_enum.move(330, 36)
-        self.up_vector_enum.resize(40, 20)
+        self.up_vector_enum.move(325, 36)
+        self.up_vector_enum.resize(33, 20)
         self.up_vector_enum.addItem('x')
         self.up_vector_enum.addItem('y')
         self.up_vector_enum.addItem('z')
+        self.up_vector_enum.setCurrentIndex(1)
+
+        return
+
 
     def create_layouts(self):
         # Create the skeleton tab layout:
@@ -239,6 +249,9 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         # Create Transforms Tab layout:
         transforms_tab_layout = QtWidgets.QFormLayout(self.transforms_tab)
 
+        return
+
+
     def create_connections(self):
         self.jfc_btn.clicked.connect(self.ui_joint_from_component)
         self.harden_btn.clicked.connect(self.ui_harden_skin)
@@ -258,6 +271,8 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.dumb_copy_orient_btn.clicked.connect(self.ui_dumb_copy_orient)
         self.smart_copy_orient_btn.clicked.connect(self.ui_smart_copy_orient)
 
+        return
+
 
     # UI commands:
 
@@ -265,79 +280,122 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         print ("UI call for skeleton.joint_from_components()")
         skeleton.joint_from_components()
 
+        return
+
+
     def ui_harden_skin(self):
         print ("UI call for skinning.harden()")
         skinning.harden()
+
+        return
+
 
     def ui_copy_skinweights(self):
         print ("UI call for skinning.copy_skinweights()")
         skinning.copy_skinweights()
 
+        return
+
+
     def ui_find_related_cluster(self):
         print ("UI call for skinning.find_related_skinCluster()")
         skinning.find_related_skinCluster()
+
+        return
+
 
     def ui_find_related_joints(self):
         print ("UI call for skinning.select_bound_joints()")
         skinning.select_bound_joints()
 
+        return
+
+
     def ui_create_offset(self):
         print ("UI call for handles.create_offset()")
         handles.create_offset()
 
+        return
+
+
     def ui_connect_xform(self):
         print ("UI call for connections.connect_xforms()")
         connections.connect_xforms()
+
+        return
+
 
     def ui_batch_connect(self):
         print ("UI call for connections.batch_connect()")
         # uses input attributes for parameters
         connections.batch_connect(str(self.get_driver.text()), str(self.get_driven.text()))
 
+        return
+
+
     def ui_swap_controls(self):
         print ("UI call for swapping control shape")
         all_control_options.swap_shape()
+
+        return
+
 
     def ui_control_options(self):
         print ("UI call for picking control")
         all_control_options.pick_control(self.shape_options.currentText())
 
+        return
+
+
     def ui_colour_options(self):
         print ("UI call for picking colour")
         all_control_options.pick_colour()
+
+        return
+
 
     def ui_aim_at(self):
         print ("UI call for aim at button")
 
         # takes selection as node and target
         nodes = pm.ls(selection=True)
-        node = nodes[0]
-        target = nodes[1]
+        node = nodes[1]
+        target = nodes[0]
 
         # takes values entered
         pv_x = float(self.h_input_pv_x.text())
         pv_y = float(self.h_input_pv_y.text())
         pv_z = float(self.h_input_pv_z.text())
 
+        if(self.vector_enum.currentText() == self.up_vector_enum.currentText()):
+            pm.warning("Aimed vector and up vector can't be the same thing!")
+            return
+
         pos_axis = ['x', 'y', 'z']
         pos_axis.remove(self.vector_enum.currentText())
         pos_axis.remove(self.up_vector_enum.currentText())
-        print("Popped list is {}".format(pos_axis))
         pv_z = pos_axis[0]
-        print("pv_z is {}".format(pv_z))
 
+        print("vec is {}".format(self.vector_enum.currentText()))
 
-        orientation.aim_at(node, target, vec=self.vector_enum.currentText(),
-                           pole_vec=(pv_x, pv_y, pv_x),
-                           axis=self.up_vector_enum.currentIndex(), pole=pv_z)
+        orientation.aim_at(node, target, pole_vec=(pv_x, pv_y, pv_x),
+                           axis=self.vector_enum.currentIndex(), 
+                           pole=self.up_vector_enum.currentIndex())
+
+        return
 
 
     def ui_dumb_copy_orient(self):
         orientation.dumb_copy_orient()
 
+        return
+
 
     def ui_smart_copy_orient(self):
         orientation.smart_copy_orient()
+
+        return
+
 
 def run():
     """displays windows"""
@@ -354,3 +412,5 @@ def run():
 
     #shows window
     srsu_main_dialog.show(dockable=True, floating=True)
+
+    return

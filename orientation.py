@@ -431,7 +431,7 @@ def aim_at(node, target=None, vec=None, pole_vec=(0,1,0), axis=0, pole=1):
 
     # If we got a vec, use that instead.
     elif(vec != None):
-        target_vec = dt.Vector(vec).normal()
+        target_vec = dt.Vector(vec)
 
     else:
         pm.error("sr_biped error: Either a vector or a target is required.")
@@ -440,6 +440,8 @@ def aim_at(node, target=None, vec=None, pole_vec=(0,1,0), axis=0, pole=1):
     if(target_vec == pole_vec):
         pm.error("sr_biped error: Target vector and pole vector are identical-- result will be "
             "unsafe.")
+
+    target_vec.normalize()
 
     # Step two, "unconstrained" vec; cross product of normalized vector and normalized pole vector 
     # is found and stored.
@@ -470,7 +472,6 @@ def aim_at(node, target=None, vec=None, pole_vec=(0,1,0), axis=0, pole=1):
         x_axis_vec = clean_pole
         remaining_vectors.pop('x') 
         # Note it should be impossible to pop the same twice at this point due to the early check.
-
     elif(pole == 1):
         y_axis_vec = clean_pole
         remaining_vectors.pop('y')
@@ -490,6 +491,7 @@ def aim_at(node, target=None, vec=None, pole_vec=(0,1,0), axis=0, pole=1):
 
     for last_axis in ['x_axis_vec', 'y_axis_vec', 'z_axis_vec']:
         if(eval(last_axis + ' == None') == True):
+            print("Last vector is {}".format(last_axis))
             exec('{} = last_vec'.format(last_axis))
             break
 
