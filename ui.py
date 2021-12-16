@@ -319,9 +319,17 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         pv_y = float(self.h_input_pv_y.text())
         pv_z = float(self.h_input_pv_z.text())
 
+        pos_axis = ['x', 'y', 'z']
+        pos_axis.remove(self.vector_enum.currentText())
+        pos_axis.remove(self.up_vector_enum.currentText())
+        print("Popped list is {}".format(pos_axis))
+        pv_z = pos_axis[0]
+        print("pv_z is {}".format(pv_z))
+
+
         orientation.aim_at(node, target, vec=self.vector_enum.currentText(),
                            pole_vec=(pv_x, pv_y, pv_x),
-                           axis=self.up_vector_enum.currentIndex(), pole=2)
+                           axis=self.up_vector_enum.currentIndex(), pole=pv_z)
 
 
     def ui_dumb_copy_orient(self):
@@ -338,7 +346,7 @@ def run():
         #checks all objects in scene and verifies whether an instance of the window exists
 
         if isinstance(obj, MainDialog):
-            print "checking for instances"
+            print ("checking for instances")
             obj.close()
 
 
