@@ -18,8 +18,9 @@ def smart_copy_orient(subject=None, target=None, s_child=None, t_child=None, rep
     subject - the joint upon which to paste the orientation
     target - the joint from which to copy the orientation from    
     '''
-
+    ui_mode = False
     if(subject == None or target == None):
+        ui_mode = True
         selection = pm.ls(sl=True)
         if(len(selection) != 2):
             pm.error("Must select exactly two joints for this operation.")
@@ -61,6 +62,10 @@ def smart_copy_orient(subject=None, target=None, s_child=None, t_child=None, rep
 
     if(reparent):
         pm.parent(child_joint, target, a=True)
+
+    # Finish by selecting target.
+    if(ui_mode):
+        pm.select(target, r=True)
 
     return
 
