@@ -370,14 +370,9 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
             pm.warning("Aimed vector and up vector can't be the same thing!")
             return
 
-        pos_axis = ['x', 'y', 'z']
-        pos_axis.remove(self.vector_enum.currentText())
-        pos_axis.remove(self.up_vector_enum.currentText())
-        pv_z = pos_axis[0]
-
         print("vec is {}".format(self.vector_enum.currentText()))
 
-        orientation.aim_at(node, target, pole_vec=(pv_x, pv_y, pv_x),
+        orientation.aim_at(node, target, pole_vector=(pv_x, pv_y, pv_z),
                            axis=self.vector_enum.currentIndex(), 
                            pole=self.up_vector_enum.currentIndex())
 
