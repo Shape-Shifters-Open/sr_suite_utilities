@@ -413,6 +413,8 @@ def aim_at(subject, target, up_vector=(0.0, 0.0, 0.1), aim_axis=0, up_axis=2):
     aim_at(PyNode, PyNode, up_vector=(float, float, float), aim_axis=int, up_axis=int)
     '''
 
+    fix_determinant = False # A flag to fix negative determinants
+
     subject_position = subject.getTranslation(space='world')
     target_position = target.getTranslation(space='world')
 
@@ -422,14 +424,26 @@ def aim_at(subject, target, up_vector=(0.0, 0.0, 0.1), aim_axis=0, up_axis=2):
     up_vector_scoped = dt.Vector(up_vector) # named to separate it from the arg.
     up_vector_scoped.normalize()
 
-    last_vector = aim_vector.cross(up_vector_scoped)
+    last_vector = up_vector_scoped.cross(aim_vector)
     last_vector.normalize()
+
+    # Some combination of chosen axis will create a negative determinent.  This gets reconciled by
+    # the scale becoming negative.
+    flip_combos = [(0,1), (1,2), (2,0)]
+    if((aim_axis, up_axis) in flip_combos):
+        fix_determinant = True
 
     up_vector_scoped = aim_vector.cross(last_vector)
     up_vector_scoped.normalize()
 
     # Now the three vectors are ready, their position inside the matrix has to get chosen.
     axes = ['x', 'y', 'z']
+
+    if(fix_determinant):
+        print("Fixing the determinant...\nold final vector: {}".format(last_vector))
+        last_vector = aim_vector.cross(up_vector_scoped)
+        last_vector.normalize()
+        print("New final vector:{}".format(last_vector))
 
     if(aim_axis == 0):
         x_row = list(aim_vector)
@@ -464,6 +478,7 @@ def aim_at(subject, target, up_vector=(0.0, 0.0, 0.1), aim_axis=0, up_axis=2):
     else:
         pm.error("Failed to determine last vector.  This is a bug.")
 
+
     # Append fourth values to the matrix' right side.
     for row in [x_row, y_row, z_row]:
         row.append(0.0)
@@ -474,7 +489,10 @@ def aim_at(subject, target, up_vector=(0.0, 0.0, 0.1), aim_axis=0, up_axis=2):
 
     new_matrix = dt.Matrix(x_row, y_row, z_row, trans_row)
 
+    print("The determinant is {}".format(new_matrix.det()))
+
     subject.setMatrix(new_matrix, worldSpace=True)
+
 
     return
 
