@@ -358,6 +358,11 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
         # takes selection as node and target
         nodes = pm.ls(selection=True)
+
+        if(len(nodes) != 2):
+            pm.warning("Please select one target and one subject (transform nodes)")
+            return
+            
         node = nodes[1]
         target = nodes[0]
 
@@ -370,16 +375,9 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
             pm.warning("Aimed vector and up vector can't be the same thing!")
             return
 
-        pos_axis = ['x', 'y', 'z']
-        pos_axis.remove(self.vector_enum.currentText())
-        pos_axis.remove(self.up_vector_enum.currentText())
-        pv_z = pos_axis[0]
-
-        print("vec is {}".format(self.vector_enum.currentText()))
-
-        orientation.aim_at(node, target, pole_vec=(pv_x, pv_y, pv_x),
-                           axis=self.vector_enum.currentIndex(), 
-                           pole=self.up_vector_enum.currentIndex())
+        orientation.aim_at(node, target, up_vector=(pv_x, pv_y, pv_z),
+                           aim_axis=self.vector_enum.currentIndex(), 
+                           up_axis=self.up_vector_enum.currentIndex())
 
         return
 

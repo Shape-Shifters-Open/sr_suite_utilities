@@ -403,121 +403,92 @@ def closest_axis(source_joint, target_joint, s_exclude_axis=None, t_exclude_axis
     return (s_match_axis, t_match_axis, t_match_vec)
 
 
-def aim_at(node, target=None, vec=None, pole_vec=(0,1,0), axis=0, pole=1):
-    '''
-    Aim's a node's axis at another point in space and a "pole axis" down a normalized vector.
-    Operates in place on the given node-- returns nothing.
 
-    node - PyNode of the transform to be aimed
-    target - PyNode of object to be aimed at (if vec == None)
-    vec - dt.Vector of direction to aim in (if target == None)
-    pole_vec - A dt.Vector that aims toward the "pole" of this aim constraint.
-    axis - the axis along which to aim down. (enumated x,y,z where x=0)
-    pole - the "pole" axis, which will aim at the vec (enumerated x,y,z where x=0)
+def aim_at(subject, target, up_vector=(0.0, 0.0, 1.0), aim_axis=0, up_axis=2):
+    '''
+    Aims the subject node down the target node, and twists it to the provided up-vector.
+    Axis involved are specificially defined as 0-2, for x-z.
+    
+    usage:
+    aim_at(PyNode, PyNode, up_vector=(float, float, float), aim_axis=int, up_axis=int)
     '''
 
-    # Check for bad args:
-    if(pole == axis):
-        pm.error("sr_biped error: Chosen pole and aim axis can't be identical.")
+    fix_determinant = False # A flag to fix negative determinants
 
-    # Format some vectors into the dt.Vector type
-    pole_vec = dt.Vector(pole_vec)
-    node_pos = dt.Vector(pm.xform(node, q=True, ws=True, t=True))
+    subject_position = subject.getTranslation(space='world')
+    target_position = target.getTranslation(space='world')
 
-    # Sort what we are aiming at:
-    # If we got a target, use it.
-    if(target != None):
-        target_pos = dt.Vector(pm.xform(target, q=True, ws=True, t=True))
-        target_vec = target_pos - node_pos
-        target_vec.normalize()
+    aim_vector = target_position - subject_position
+    aim_vector.normalize()
 
-        if(vec != None):
-            pm.warning("Both vec and node are populated.  Node will take precidence.")
+    up_vector_scoped = dt.Vector(up_vector) # named to separate it from the arg.
+    up_vector_scoped.normalize()
 
-    # If we got a vec, use that instead.
-    elif(vec != None):
-        target_vec = dt.Vector(vec)
+    last_vector = up_vector_scoped.cross(aim_vector)
+    last_vector.normalize()
 
+    # Some combination of chosen axis will create a negative determinent.  This gets reconciled by
+    # the scale becoming negative.
+    flip_combos = [(0,1), (1,2), (2,0)]
+    if((aim_axis, up_axis) in flip_combos):
+        fix_determinant = True # With this flag, we know to re-calc the last_axis.
+
+    up_vector_scoped = aim_vector.cross(last_vector)
+    up_vector_scoped.normalize()
+
+    # Now the three vectors are ready, their position inside the matrix has to get chosen.
+    axes = ['x', 'y', 'z']
+
+    if(fix_determinant):
+        # By re-discovering the cross product at this point, we "reverse" it (not negate it!) which
+        # will prevent a negative scale in certain arrangements of the matrix (half of the total 
+        # possible configurations have this problem.)
+        last_vector = aim_vector.cross(up_vector_scoped)
+        last_vector.normalize()
+        
+    if(aim_axis == 0):
+        x_row = list(aim_vector)
+        axes.remove('x')
+    elif(aim_axis == 1):
+        y_row = list(aim_vector)
+        axes.remove('y')
+    elif(aim_axis == 2):
+        z_row = list(aim_vector)
+        axes.remove('z')
     else:
-        pm.error("sr_biped error: Either a vector or a target is required.")
-        return
+        pm.error("Bad axis int given for aim_axis: {}; should be 0,1,2 for x,y,z.".format(aim_axis))
 
-    if(target_vec == pole_vec):
-        pm.error("sr_biped error: Target vector and pole vector are identical-- result will be "
-            "unsafe.")
-
-    target_vec.normalize()
-
-    # Step two, "unconstrained" vec; cross product of normalized vector and normalized pole vector 
-    # is found and stored.
-    last_vec = target_vec.cross(pole_vec)
-    last_vec.normalize()
-
-    # Step three, we "clean" the pole vector by getting the cross product of the aim and the 
-    # "unconstrained" axis vector.
-    clean_pole = target_vec.cross(last_vec)
-    clean_pole.normalize()
-
-    # Before we proceed, we shuffle based on the incoming arguments.  Chosen axis to aim...
-    x_axis_vec = y_axis_vec = z_axis_vec = None
-    remaining_vectors = { 'x':True, 'y':True, 'z':True }
-
-    if(axis == 0):
-        x_axis_vec = target_vec
-        remaining_vectors.pop('x')
-    elif(axis == 1):
-        y_axis_vec = target_vec
-        remaining_vectors.pop('y')
-    elif(axis == 2):
-        z_axis_vec = target_vec
-        remaining_vectors.pop('z')
-
-    # And unconstrained.
-    if(pole == 0):
-        x_axis_vec = clean_pole
-        remaining_vectors.pop('x') 
-        # Note it should be impossible to pop the same twice at this point due to the early check.
-    elif(pole == 1):
-        y_axis_vec = clean_pole
-        remaining_vectors.pop('y')
-    elif(pole == 2):
-        z_axis_vec = clean_pole
-        remaining_vectors.pop('z')
-
-    # Decide which axis gets the "last_vec" applied based on what remains in the dict
-    if (remaining_vectors.keys()[0] == 'x'):
-        x_axis_vec = last_vec
-    elif (remaining_vectors.keys()[0] == 'y'):
-        y_axis_vec = last_vec
-    elif (remaining_vectors.keys()[0] == 'z'):
-        z_axis_vec = last_vec
+    if(up_axis == 0):
+        x_row = list(up_vector_scoped)
+        axes.remove('x')
+    elif(up_axis == 1):
+        y_row = list(up_vector_scoped)
+        axes.remove('y')
+    elif(up_axis == 2):
+        z_row = list(up_vector_scoped)
+        axes.remove('z')
     else:
-        pm.error('No good axis keys remaining in the "remaining_vectors" dict.')
+        pm.error("Bad axis int given for up_axis: {}; should be 0,1,2 for x,y,z.".format(up_axis))
 
-    for last_axis in ['x_axis_vec', 'y_axis_vec', 'z_axis_vec']:
-        if(eval(last_axis + ' == None') == True):
-            print("Last vector is {}".format(last_axis))
-            exec('{} = last_vec'.format(last_axis))
-            break
+    if(axes[0] == 'x'):
+        x_row = list(last_vector)
+    elif(axes[0] == 'y'):
+        y_row = list(last_vector)
+    elif(axes[0] == 'z'):
+        z_row = list(last_vector)
+    else:
+        pm.error("Failed to determine last vector.  This is a bug.")
 
-    # Turn the axis vectors into lists to slot into the Matrix:
-    m0 = list(x_axis_vec)
-    m1 = list(y_axis_vec)
-    m2 = list(z_axis_vec)
+    # Append fourth values to the matrix' right side.
+    for row in [x_row, y_row, z_row]:
+        row.append(0.0)
 
-    # Recompose transform data here so it lands in a list to put inside the matrix correctly.
-    m3 = list(node_pos.get())
+    # Create the bottom row of the matrix using the transform of the subject, plus a final 1.0
+    trans_row = list(subject_position)
+    trans_row.append(1.0)
 
-    # Fabricate the rightmost columns constant state.
-    m0.append(0.0)
-    m1.append(0.0)
-    m2.append(0.0)
-    m3.append(1.0)
-
-    # Step four, apply the values of each vector to the correct place in the matrix.
-    aimed_matrix = dt.Matrix(m0, m1, m2, m3)
-
-    node.setMatrix(aimed_matrix, worldSpace=True)
+    new_matrix = dt.Matrix(x_row, y_row, z_row, trans_row)
+    subject.setMatrix(new_matrix, worldSpace=True)
 
     return
 
