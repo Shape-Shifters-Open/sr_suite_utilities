@@ -404,7 +404,7 @@ def closest_axis(source_joint, target_joint, s_exclude_axis=None, t_exclude_axis
 
 
 
-def aim_at(subject, target, up_vector=(0.0, 0.0, 0.1), aim_axis=0, up_axis=2):
+def aim_at(subject, target, up_vector=(0.0, 0.0, 1.0), aim_axis=0, up_axis=2):
     '''
     Aims the subject node down the target node, and twists it to the provided up-vector.
     Axis involved are specificially defined as 0-2, for x-z.
@@ -431,7 +431,7 @@ def aim_at(subject, target, up_vector=(0.0, 0.0, 0.1), aim_axis=0, up_axis=2):
     # the scale becoming negative.
     flip_combos = [(0,1), (1,2), (2,0)]
     if((aim_axis, up_axis) in flip_combos):
-        fix_determinant = True
+        fix_determinant = True # With this flag, we know to re-calc the last_axis.
 
     up_vector_scoped = aim_vector.cross(last_vector)
     up_vector_scoped.normalize()
@@ -440,11 +440,12 @@ def aim_at(subject, target, up_vector=(0.0, 0.0, 0.1), aim_axis=0, up_axis=2):
     axes = ['x', 'y', 'z']
 
     if(fix_determinant):
-        print("Fixing the determinant...\nold final vector: {}".format(last_vector))
+        # By re-discovering the cross product at this point, we "reverse" it (not negate it!) which
+        # will prevent a negative scale in certain arrangements of the matrix (half of the total 
+        # possible configurations have this problem.)
         last_vector = aim_vector.cross(up_vector_scoped)
         last_vector.normalize()
-        print("New final vector:{}".format(last_vector))
-
+        
     if(aim_axis == 0):
         x_row = list(aim_vector)
         axes.remove('x')
@@ -478,7 +479,6 @@ def aim_at(subject, target, up_vector=(0.0, 0.0, 0.1), aim_axis=0, up_axis=2):
     else:
         pm.error("Failed to determine last vector.  This is a bug.")
 
-
     # Append fourth values to the matrix' right side.
     for row in [x_row, y_row, z_row]:
         row.append(0.0)
@@ -488,11 +488,7 @@ def aim_at(subject, target, up_vector=(0.0, 0.0, 0.1), aim_axis=0, up_axis=2):
     trans_row.append(1.0)
 
     new_matrix = dt.Matrix(x_row, y_row, z_row, trans_row)
-
-    print("The determinant is {}".format(new_matrix.det()))
-
     subject.setMatrix(new_matrix, worldSpace=True)
-
 
     return
 
