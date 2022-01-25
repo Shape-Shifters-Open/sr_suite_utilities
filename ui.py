@@ -14,8 +14,9 @@ import sys
 
 # From related modules:
 
-import globals
+
 import skeleton
+import globals
 import skinning
 import handles
 import connections
@@ -33,11 +34,21 @@ def maya_main_window():
 
 class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
-    def __init__(self, parent=maya_main_window()):
-        super(MainDialog, self).__init__(parent)
-        self.setWindowTitle("Shaper Rigs Suite Utilities v{}".format(globals.srsu_version))
+    #storing current instance in a variable
+    instance = None
+
+    def __init__(self, parent=maya_main_window(), **kwargs):
+
+        #calling function to check for current instance and delete it
+        self.delete_instance()
+        self.__class__.instance = self
+
+        super(MainDialog, self).__init__(parent, **kwargs)
+        self.setWindowTitle("Shaper Rigs Suite Utilities v0.1.07")
         self.setMinimumWidth(400)
         self.setMinimumHeight(200)
+
+        
 
         # Remove help button flag on windows wm.
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
@@ -47,6 +58,14 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.create_connections()
 
         return
+
+    def delete_instance(self):
+        """looks for currente existing instance and deletes it"""
+        if self.__class__.instance is not None:
+            try:
+                self.__class__.instance.deleteLater()
+            except Exception as e:
+                pass
 
 
     def create_widgets(self):
