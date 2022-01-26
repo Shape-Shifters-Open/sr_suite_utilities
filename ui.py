@@ -10,7 +10,7 @@ import sys
 from PySide2 import QtCore, QtWidgets, QtGui
 from shiboken2 import wrapInstance
 import gc
-import sys
+
 
 # From related modules:
 
@@ -63,9 +63,12 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         """looks for currente existing instance and deletes it"""
         if self.__class__.instance is not None:
             try:
+                self.__class__.instance.close()
                 self.__class__.instance.deleteLater()
             except Exception as e:
                 pass
+        
+        return
 
 
     def create_widgets(self):
@@ -409,20 +412,12 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
     def ui_smart_copy_orient(self):
         orientation.smart_copy_orient()
-
+ 
         return
 
 
 def run():
     """displays windows"""
-
-    for obj in gc.get_objects():
-        #checks all objects in scene and verifies whether an instance of the window exists
-
-        if isinstance(obj, MainDialog):
-            print ("checking for instances")
-            obj.close()
-
 
     srsu_main_dialog = MainDialog()
 
@@ -430,3 +425,5 @@ def run():
     srsu_main_dialog.show(dockable=True, floating=True)
 
     return
+
+  
