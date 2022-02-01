@@ -2,7 +2,7 @@
 # Matt Riche 2021
 # sr_suite_utilities for kinematic solver related operations.
 
-import coord_math as m
+from . import coord_math as m
 import pymel.core as pm
 
 # SSC default bone names

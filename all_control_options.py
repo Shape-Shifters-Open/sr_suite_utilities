@@ -4,14 +4,13 @@ import pymel.core as pm
 # Trust all the following to ship with Maya.
 from PySide2 import QtCore, QtWidgets
 from shiboken2 import wrapInstance
-import dict_lib
+from . import dict_lib
 
 """All the options to modify control shape and colour
 Will add a size option"""
 
 def swap_shape():
     """takes first selected shape and swaps the other shapes to match it"""
-    print "swapping shape"
 
     #takes selection of controls for swap
     all_controls = pm.ls(selection = True)
@@ -37,7 +36,6 @@ def swap_shape():
 
 def pick_control(control_selected):
     """changes control shape to chosen shape"""
-    print "displaying control picker"
 
     #takes selection of controls to be changed
     cur_curve = pm.ls(selection=True)

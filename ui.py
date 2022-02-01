@@ -2,6 +2,7 @@
 # Matt Riche 2021
 # Shaper Rigs in-suite UI.
 
+from pickletools import long4
 from pymel.core.datatypes import Vector
 import maya.OpenMayaUI as omui
 import pymel.core as pm
@@ -14,20 +15,20 @@ import sys
 
 # From related modules:
 
-import globals
-import skeleton
-import skinning
-import handles
-import connections
-import dict_lib
-import all_control_options
-import orientation
+from . import globals
+from . import skeleton
+from . import skinning
+from . import handles
+from . import connections
+from . import dict_lib
+from . import all_control_options
+from . import orientation
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()
-    return wrapInstance(long(main_window_ptr), QtWidgets.QWidget)
+    return wrapInstance(int(main_window_ptr), QtWidgets.QWidget)
 
 
 
