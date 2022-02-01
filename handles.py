@@ -3,7 +3,7 @@
 # Shaper Rigs suite utilities relating to the setup of handles and controls.
 
 import pymel.core as pm
-import dict_lib as dl
+from . import dict_lib as dl
 
 offset_string = "_Offset"
 

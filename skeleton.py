@@ -3,13 +3,13 @@
 # sr_suite_utilities module for editing and creating joints
 
 
-import coord_math as cmath
-from constants import GENERIC_KEYS, SR_MAPPING
-import orientation as ori
+from . import coord_math as cmath
+from .constants import GENERIC_KEYS, SR_MAPPING
+from . import orientation as ori
 import pymel.core as pm
 import pymel.core.datatypes as dt
-import fbx_utils as fbx
-import constraints as cns
+from . import fbx_utils as fbx
+from . import constraints as cns
 
 def joint_from_components(name="_JNT"):
     '''

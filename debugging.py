@@ -6,7 +6,7 @@ Debugging tools for other parts of the suite.
 
 import pymel.core as pm
 import pymel.core.datatypes as dt
-import colour as cl
+from . import colour as cl
 
 def make_vector_nurbs(vector, start_point=None):
     '''
