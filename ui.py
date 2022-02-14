@@ -23,6 +23,7 @@ from . import connections
 from . import dict_lib
 from . import all_control_options
 from . import orientation
+from . import deform
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
 
@@ -143,15 +144,11 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.h_control_selection_btn.resize(150, 30)
         self.h_control_selection_btn.setStyleSheet("border: 3px solid blue;border-left-width: 0px;")
 
-        #     add colour options
+        # add colour options
         self.h_color_options_btn = QtWidgets.QPushButton(self.controls_tab)
         self.h_color_options_btn.setText("Colour Options")
 
-        # FKIK Ttab
-        self.fkik_tab = QtWidgets.QWidget()
-        self.tools_tab.addTab(self.fkik_tab, "FK/IK")
-
-        self.tools_tab.setCurrentIndex(0)
+        #self.tools_tab.setCurrentIndex(0)
 
         # Transforms tab
         self.transforms_tab = QtWidgets.QWidget()
@@ -211,6 +208,16 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.up_vector_enum.addItem('y')
         self.up_vector_enum.addItem('z')
         self.up_vector_enum.setCurrentIndex(1)
+
+
+        # Deform Tab tab
+        self.deform_tab = QtWidgets.QWidget()
+        self.tools_tab.addTab(self.deform_tab, "Deform")
+        
+        # To get bake-delta-to-tweak button ready...
+        # we just call deform.deltas_to_tweak(pm.PyNode(new geo), pm.PyNode(old geo), pm.PyNode(tweak))
+        # Those three args need to be acquired by UI?
+        
 
         return
 
