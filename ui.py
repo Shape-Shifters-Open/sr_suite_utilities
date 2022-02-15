@@ -209,7 +209,6 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.up_vector_enum.addItem('z')
         self.up_vector_enum.setCurrentIndex(1)
 
-
         # Deform Tab tab
         self.deform_tab = QtWidgets.QWidget()
         self.tools_tab.addTab(self.deform_tab, "Deform")
@@ -217,7 +216,7 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         # To get bake-delta-to-tweak button ready...
         # we just call deform.deltas_to_tweak(pm.PyNode(new geo), pm.PyNode(old geo), pm.PyNode(tweak))
         # Those three args need to be acquired by UI?
-        
+
 
         return
 
