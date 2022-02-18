@@ -37,9 +37,9 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
     def __init__(self, parent=maya_main_window()):
         super(MainDialog, self).__init__(parent)
-        self.setWindowTitle("Shaper Rigs Suite Utilities v{}".format(globals.srsu_version))
+        self.setWindowTitle("Shaper Rigs Suite Utilities v0.1.08")
         self.setMinimumWidth(400)
-        self.setMinimumHeight(200)
+        self.setMinimumHeight(500)
 
         # Remove help button flag on windows wm.
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
@@ -54,7 +54,7 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
     def create_widgets(self):
         # Prep tabs:
         self.tools_tab = QtWidgets.QTabWidget(self)
-        self.tools_tab.setGeometry(QtCore.QRect(20, 20, 371, 361))
+        self.tools_tab.setGeometry(QtCore.QRect(20, 20, 371, 600))
         self.tools_tab.setAutoFillBackground(False)
 
         # Make the skeleton tab
@@ -90,6 +90,60 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
         self.save_skin_btn = QtWidgets.QPushButton(self.skin_tab)
         self.save_skin_btn.setText("Save Skin to JSON")
+
+        # Rip Skin Tab Groupbox
+        self.rip_box = QtWidgets.QGroupBox("Rip Skin Tool", self.skin_tab)
+        self.rip_box.move(10, 175)
+        self.rip_box.resize(360, 240)
+        
+
+        self.h_source_txtbox = QtWidgets.QLabel(self.skin_tab)
+        self.h_source_txtbox.setText("Input Source Mesh")
+        self.get_source_mesh = QtWidgets.QLineEdit(self.skin_tab)
+        self.h_target_txtbox = QtWidgets.QLabel(self.skin_tab)
+        self.h_target_txtbox.setText("Input Target Mesh")
+        self.get_target_mesh = QtWidgets.QLineEdit(self.skin_tab)
+
+
+        self.match_by_options_label = QtWidgets.QLabel(self.skin_tab)
+        self.match_by_options_label.setText("Match by")
+        self.match_by_options = QtWidgets.QComboBox(self.skin_tab)
+
+        all_options = ["Closest Point", "UVs"]
+        for option in all_options:
+            self.match_by_options.addItem(option)
+        
+        self.influence_options_label = QtWidgets.QLabel(self.skin_tab)
+        self.influence_options_label.setText("Influence Option")
+        self.influence_options = QtWidgets.QComboBox(self.skin_tab)
+
+        all_options = ["Closest Joint", "Namespace"]
+        for option in all_options:
+            self.influence_options.addItem(option)
+
+
+        self.rip_skin_btn = QtWidgets.QPushButton(self.skin_tab)
+        self.rip_skin_btn.setText("Rip Skin")
+
+
+        self.vbox = QtWidgets.QVBoxLayout()
+        self.rip_box.setLayout(self.vbox)
+        self.vbox.addWidget(self.h_source_txtbox)
+        self.vbox.addWidget(self.get_source_mesh)
+        self.rip_box.layout().addLayout(self.vbox)
+        self.vbox.addWidget(self.h_target_txtbox)
+        self.vbox.addWidget(self.get_target_mesh)
+        self.rip_box.layout().addLayout(self.vbox)     
+        self.vbox.addWidget(self.match_by_options_label)
+        self.vbox.addWidget(self.match_by_options)
+        self.rip_box.layout().addLayout(self.vbox)
+        self.vbox.addWidget(self.influence_options_label)
+        self.vbox.addWidget(self.influence_options)
+        self.rip_box.layout().addLayout(self.vbox)
+        self.vbox.addWidget(self.rip_skin_btn)
+
+
+        
 
         # Heirachy Tab (Some of this is from "controllers.py")
         self.hierarchy_tab = QtWidgets.QWidget()
@@ -150,6 +204,21 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
         #self.tools_tab.setCurrentIndex(0)
 
+        self.h_choose_axis_txtbox = QtWidgets.QLabel(self.controls_tab)
+        self.h_choose_axis_txtbox.setText("Choose mirror axis")
+        self.h_choose_axis_txtbox.move(10, 120)
+        self.h_choose_axis_txtbox.resize(150, 30)
+        self.mirror_axes = QtWidgets.QComboBox(self.controls_tab)
+        self.mirror_axes.move(110, 125)
+        self.mirror_axes.resize(40, 20)
+        self.mirror_axes.addItem('X')
+        self.mirror_axes.addItem('Y')
+        self.mirror_axes.addItem('Z')
+        self.choose_mirror_axis_btn = QtWidgets.QPushButton(self.controls_tab)
+        self.choose_mirror_axis_btn.setText("Mirror Control")
+        self.choose_mirror_axis_btn.move(160, 125)
+        self.choose_mirror_axis_btn.resize(190, 20)
+
         # Transforms tab
         self.transforms_tab = QtWidgets.QWidget()
         self.tools_tab.addTab(self.transforms_tab, "Transforms")
@@ -209,9 +278,38 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.up_vector_enum.addItem('z')
         self.up_vector_enum.setCurrentIndex(1)
 
+        
+
         # Deform Tab tab
         self.deform_tab = QtWidgets.QWidget()
         self.tools_tab.addTab(self.deform_tab, "Deform")
+
+        self.new_geo_txtbox = QtWidgets.QLabel(self.deform_tab)
+        self.new_geo_txtbox.setText("Input New Geo")
+        self.new_geo_txtbox.move(10, 21)
+        self.get_new_geo = QtWidgets.QLineEdit(self.deform_tab)
+        self.get_new_geo.move(150, 21)
+        self.get_new_geo.resize(210, 20)
+
+        self.new_geo_txtbox = QtWidgets.QLabel(self.deform_tab)
+        self.new_geo_txtbox.setText("Input Old Geo")
+        self.new_geo_txtbox.move(10, 42)
+        self.get_old_geo = QtWidgets.QLineEdit(self.deform_tab)
+        self.get_old_geo.move(150, 42)
+        self.get_old_geo.resize(210, 20)
+
+        self.tweak_node = QtWidgets.QLabel(self.deform_tab)
+        self.tweak_node.setText("Input Tweak Node")
+        self.tweak_node.move(10, 63)
+        self.get_tweak_node = QtWidgets.QLineEdit(self.deform_tab)
+        self.get_tweak_node.move(150, 63)
+        self.get_tweak_node.resize(210, 20)
+
+        self.h_deform_btn = QtWidgets.QPushButton(self.deform_tab)
+        self.h_deform_btn.setText("Bake Deltas")
+        self.h_deform_btn.move(10, 84)
+        self.h_deform_btn.resize(360, 20)
+
         
         # To get bake-delta-to-tweak button ready...
         # we just call deform.deltas_to_tweak(pm.PyNode(new geo), pm.PyNode(old geo), pm.PyNode(tweak))
@@ -276,6 +374,13 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.h_aim_at_btn.clicked.connect(self.ui_aim_at)
         self.dumb_copy_orient_btn.clicked.connect(self.ui_dumb_copy_orient)
         self.smart_copy_orient_btn.clicked.connect(self.ui_smart_copy_orient)
+
+        self.mirror_axes.currentText()
+        self.choose_mirror_axis_btn.clicked.connect(self.ui_mirror_control)
+        self.rip_skin_btn.clicked.connect(self.ui_rip_skin_btn)
+
+        self.h_deform_btn.clicked.connect(self.ui_bake_deltas)
+
 
         return
 
@@ -399,6 +504,41 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         orientation.smart_copy_orient()
 
         return
+
+
+
+    def ui_mirror_control(self):
+        all_control_options.get_controls(self.mirror_axes.currentText())
+        
+        return
+    
+    def ui_rip_skin_attrs(self):
+        if not self.get_source_mesh.text():
+            source_mesh = pm.ls(selection = True)[0]
+        else:
+            source_mesh = self.get_source_mesh.text()
+        
+        if not self.get_target_mesh.text():
+            target_mesh = pm.ls(selection = True)[1]
+        else:
+            target_mesh = self.get_target_mesh.text()
+        
+        return(source_mesh, target_mesh)
+
+    def ui_rip_skin_btn(self):
+        skinning.rip_skin(self.ui_rip_skin_attrs()[0], self.ui_rip_skin_attrs()[1], 
+                        self.match_by_options.currentIndex(), self.influence_options.currentIndex())
+
+    def ui_bake_deltas(self):
+        if not self.get_new_geo.text():
+            geo = pm.ls(selection = True)
+            new_geo = geo[0]
+            old_geo = geo[1]
+        else:
+            new_geo = self.get_new_geo.text()
+            old_geo = self.get_old_geo.text()
+            
+        deform.deltas_to_tweak(new_geo, old_geo, self.get_tweak_node.text())
 
 
 def run():

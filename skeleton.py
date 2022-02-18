@@ -4,8 +4,8 @@
 
 
 from . import coord_math as cmath
-from .constants import GENERIC_KEYS, SR_MAPPING
-from . import orientation as ori
+from constants import GENERIC_KEYS, SR_MAPPING
+import orientation as ori
 import pymel.core as pm
 import pymel.core.datatypes as dt
 from . import fbx_utils as fbx

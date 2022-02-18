@@ -19,6 +19,8 @@ def deltas_to_tweak(new_geo, old_geo, tweak):
     of a tweak node.
     '''
 
+    
+
     deltas = cmp.list_vertex_deltas(new_geo, old_geo)
 
     prg.start_progbar(max_value=len(deltas), message="Baking Deltas to Tweak node...")
