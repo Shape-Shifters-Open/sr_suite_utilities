@@ -295,50 +295,39 @@ def rip_skin(source_mesh = None, target_mesh = None, match_option = 0, influence
         target_mesh = pm.ls(sl=True)[1]
 
     pm.select(source_mesh, target_mesh)
-    
-    if match_option == 0:
-        if influence == 0:
+
+
+    if influence == 0:
+        if match_option == 0:
             #if the options selected are closest points and closest joint
-            pm.copySkinWeights(surfaceAssociation = "closestPoint", influenceAssociation = "closestJoint", noMirror = True)
-            print "ripped skin"
+            pm.copySkinWeights(surfaceAssociation = "closestPoint", 
+                                influenceAssociation = "closestJoint", noMirror = True)
         else:
-            #if the options selected are closest points and namespace
-            joints = select_bound_joints(node = source_mesh)
-            pm.select(joints)
-            strip = pm.selected()[0].namespace()
-            for jnt in joints:
-                name = jnt.replace(strip, "")
-                pm.rename(jnt, name)
-
-            pm.copySkinWeights(source_mesh, target_mesh, surfaceAssociation = "closestPoint", 
-                                influenceAssociation = "name", noMirror = True)
-
-            for jnt in joints:
-                name = jnt
-                if "|" in jnt:
-                    name = jnt.split("|")[-1]
-                pm.rename(jnt, strip + jnt)
-
-    if match_option == 1:
-        if influence == 0:
             #if the options selected are uv and closest joint
-            pm.copySkinWeights(surfaceAssociation = "closestPoint", uvSpace = ['map1', 'map1'], influenceAssociation = "closestJoint", noMirror = True)
+            pm.copySkinWeights(surfaceAssociation = "closestPoint", uvSpace = ['map1', 'map1'], 
+                                influenceAssociation = "closestJoint", noMirror = True)
+    else:
+        joints = select_bound_joints(node = source_mesh)
+        pm.select(joints)
+        strip = pm.selected()[0].namespace()
+        for jnt in joints:
+            #stripping namespace
+            name = jnt.replace(strip, "")
+            pm.rename(jnt, name)
+        if match_option == 0:
+            #if the options selected are closest points and namespace
+            pm.copySkinWeights(surfaceAssociation = "closestPoint", 
+                                influenceAssociation = "name", noMirror = True)
         else:
             #if the options selected are uv and namespace
-            joints = select_bound_joints(node = source_mesh)
-            pm.select(joints)
-            strip = pm.selected()[0].namespace()
-            for jnt in joints:
-                name = jnt.replace(strip, "")
-                pm.rename(jnt, name)
-            pm.copySkinWeights(source_mesh, target_mesh, surfaceAssociation = "closestPoint",
-                             uvSpace = ['map1', 'map1'], influenceAssociation = "name", noMirror = True)
-            for jnt in joints:
-                name = jnt
-                if "|" in jnt:
-                    name = jnt.split("|")[-1]
-                pm.rename(jnt, strip + name)
-
+            pm.copySkinWeights(surfaceAssociation = "closestPoint", uvSpace = ['map1', 'map1'], 
+                                influenceAssociation = "name", noMirror = True)
+        
+        for jnt in joints:
+            name = jnt
+            if "|" in jnt:
+                #adding namespace back
+                name = jnt.split("|")[-1]
+            pm.rename(jnt, strip + name)
+    
     return
-
-
