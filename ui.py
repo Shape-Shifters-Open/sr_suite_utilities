@@ -34,21 +34,11 @@ def maya_main_window():
 
 class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
-    #storing current instance in a variable
-    instance = None
-
-    def __init__(self, parent=maya_main_window(), **kwargs):
-
-        #calling function to check for current instance and delete it
-        self.delete_instance()
-        self.__class__.instance = self
-
-        super(MainDialog, self).__init__(parent, **kwargs)
-        self.setWindowTitle("Shaper Rigs Suite Utilities v0.1.07")
+    def __init__(self, parent=maya_main_window()):
+        super(MainDialog, self).__init__(parent)
+        self.setWindowTitle("Shaper Rigs Suite Utilities v{}".format(globals.srsu_version))
         self.setMinimumWidth(400)
         self.setMinimumHeight(200)
-
-        
 
         # Remove help button flag on windows wm.
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
@@ -58,14 +48,6 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.create_connections()
 
         return
-
-    def delete_instance(self):
-        """looks for currente existing instance and deletes it"""
-        if self.__class__.instance is not None:
-            try:
-                self.__class__.instance.deleteLater()
-            except Exception as e:
-                pass
 
 
     def create_widgets(self):
@@ -165,24 +147,6 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.h_color_options_btn = QtWidgets.QPushButton(self.controls_tab)
         self.h_color_options_btn.setText("Colour Options")
 
-        #     mirror control
-        self.h_choose_axis_txtbox = QtWidgets.QLabel(self.controls_tab)
-        self.h_choose_axis_txtbox.setText("Choose mirror axis")
-        self.h_choose_axis_txtbox.move(10, 120)
-        self.h_choose_axis_txtbox.resize(150, 30)
-        self.mirror_axes = QtWidgets.QComboBox(self.controls_tab)
-        self.mirror_axes.move(110, 125)
-        self.mirror_axes.resize(40, 20)
-        self.mirror_axes.addItem('X')
-        self.mirror_axes.addItem('Y')
-        self.mirror_axes.addItem('Z')
-        self.choose_mirror_axis_btn = QtWidgets.QPushButton(self.controls_tab)
-        self.choose_mirror_axis_btn.setText("Mirror Control")
-        self.choose_mirror_axis_btn.move(160, 125)
-        self.choose_mirror_axis_btn.resize(190, 20)
-        
-
-
         # FKIK Ttab
         self.fkik_tab = QtWidgets.QWidget()
         self.tools_tab.addTab(self.fkik_tab, "FK/IK")
@@ -243,9 +207,9 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.up_vector_enum = QtWidgets.QComboBox(self.transforms_tab)
         self.up_vector_enum.move(325, 36)
         self.up_vector_enum.resize(33, 20)
-        self.up_vector_enum.addItem('X')
-        self.up_vector_enum.addItem('Y')
-        self.up_vector_enum.addItem('Z')
+        self.up_vector_enum.addItem('x')
+        self.up_vector_enum.addItem('y')
+        self.up_vector_enum.addItem('z')
         self.up_vector_enum.setCurrentIndex(1)
 
         return
@@ -306,8 +270,6 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.h_aim_at_btn.clicked.connect(self.ui_aim_at)
         self.dumb_copy_orient_btn.clicked.connect(self.ui_dumb_copy_orient)
         self.smart_copy_orient_btn.clicked.connect(self.ui_smart_copy_orient)
-        self.mirror_axes.currentText()
-        self.choose_mirror_axis_btn.clicked.connect(self.ui_mirror_control)
 
         return
 
@@ -432,10 +394,6 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
         return
 
-    def ui_mirror_control(self):
-        all_control_options.get_controls(self.mirror_axes.currentText())
-        
-        return
 
 def run():
     """displays windows"""

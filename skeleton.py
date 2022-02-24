@@ -23,26 +23,11 @@ def joint_from_components(name="_JNT"):
     '''
 
     # Use coord_math module to get average position.
-    
-    component = pm.ls(selection = True, flatten = True)
-    #print ("selection is {}".format(selection))
-    #converting faces and edges to vertices
-    verts = pm.polyListComponentConversion(component, fromFace = True, 
-                                            fromEdge = True, toVertex = True)
-    
-    #checking if selection is vertices, and leaving them as vertices
-    if not verts: verts = component
-
-    #sending clean selection list to coord_math    
-    pm.select(verts)
-    vertices = pm.ls(selection = True, flatten = True)
-    print "verts", verts
-
-    #getting position using coord_math
-    position = cmath.get_average_xform(vertices)
+    selection = pm.ls(sl=True, fl=True)
+    print ("selection is {}".format(selection))
+    position = cmath.get_average_xform(selection)
     pm.select(clear=True)
     
-    #creating joint based on position 
     joint = pm.joint(p=(position[0], position[1], position[2]), n=name)
 
     return joint

@@ -6,7 +6,6 @@ from PySide2 import QtCore, QtWidgets
 from shiboken2 import wrapInstance
 from . import dict_lib
 
-
 """All the options to modify control shape and colour
 Will add a size option"""
 
@@ -33,7 +32,7 @@ def swap_shape():
         pm.delete(current_shape)
     pm.delete(new_control)
 
-    return
+
 
 def pick_control(control_selected):
     """changes control shape to chosen shape"""
@@ -61,7 +60,6 @@ def pick_control(control_selected):
     swap_shape()
     pm.delete(new_curve_node)
 
-    return
 
 
 def set_colour():
@@ -94,79 +92,7 @@ def pick_colour():
     for each_ctrl in ctrl:
         pm.setAttr(each_ctrl + ".overrideEnabled", 1)
         pm.setAttr(each_ctrl + ".overrideRGBColors", 1)
-        pm.setAttr(each_ctrl + ".overrideColorRGB", r_value, g_value, b_value) 
-    
-    return
-
-def get_controls(axis):
-    """gets controls either from selection or from the scene
-    """
-    #grabs selection if exists
-    controls = pm.ls(selection = True)
-
-    #if selection exists, calls function to mirror on it
-    if len(controls)>0:
-        mirror_controls(controls, axis)
-
-    #if not, finds all controls in scene and mirrors those that aren't used               
-    else:
-
-        #iterates thrpugh all controls in scene and creates list of only transforms
-        controls = [pm.listRelatives(i, parent=1, type='transform')[0] for i
-        in pm.ls(type='nurbsCurve', objectsOnly=1, recursive=1, noIntermediate=1)]
-
-        for current_control in controls:
-            #removes from list if control has connections
-            if pm.listConnections(current_control, c=True):
-                controls.remove(current_control)
-                
-            else:
-                pass
-        #mirrors controls that are nto connected
-        mirror_controls(controls, axis)
-    
-    return
-
-
-def mirror_controls(controls, axis):
-    """takes an arguement of controls and axis and mirrors
-        params:
-                controls: takes either the scene selection 
-                          or all controls that are not connected
-                axis: mirrors on given axis
-    """
-    #temp side axis dictionary
-    axis_dict = {"X": "Z",
-                "Y": "X",
-                "Z":"Y"}
-    for control in controls:
-        #for temporary naming
-        name = str(control) 
-        #creates duplicate that will be mirrored
-        dup = pm.duplicate(control,renameChildren=True,rr=True,name=str(control) + "_duplicate")[0]
-        #checks if a heirarchy exists
-        current_parent = pm.listRelatives(dup, parent = True)
-        #creates world space transform for mirroring
-        parent_group = pm.group(em = True, n = name + "_GRP")
-        #parents to world space transform for mirroring
-        pm.parent(dup, parent_group)
-        #rotates and scales 
-        current_rot = pm.getAttr(parent_group + ".rotate" + axis)
-        pm.setAttr(parent_group + ".rotate" + axis, current_rot + 180)
-        pm.setAttr(parent_group + ".scale" + axis_dict[axis], -1)
-
-        #if heirarchy, places control back
-        if current_parent:
-            pm.parent(dup, current_parent)
-        #if not heirarchy, there is no parent
-        else:
-            pm.parent(dup, w = True)
-        
-        #deletes temporary wolrd space transform
-        pm.delete(parent_group)
-    
-    return
-
+        pm.setAttr(each_ctrl + ".overrideColorRGB", r_value, g_value, b_value)
 
 
 
