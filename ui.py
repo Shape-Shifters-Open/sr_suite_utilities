@@ -39,7 +39,7 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         super(MainDialog, self).__init__(parent)
         self.setWindowTitle("Shaper Rigs Suite Utilities v0.1.08")
         self.setMinimumWidth(400)
-        self.setMinimumHeight(500)
+        self.setMinimumHeight(600)
 
         # Remove help button flag on windows wm.
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
@@ -141,6 +141,25 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.vbox.addWidget(self.influence_options)
         self.rip_box.layout().addLayout(self.vbox)
         self.vbox.addWidget(self.rip_skin_btn)
+
+        #export/import skin
+
+        self.get_file_name = QtWidgets.QLabel(self.skin_tab)
+        self.get_file_name.setText("Input File Name")
+        self.get_file_name = QtWidgets.QLineEdit(self.skin_tab)
+        self.get_file_name.move(10, 415)
+        self.get_file_name.resize(350, 20)
+
+        self.export_skin_btn = QtWidgets.QPushButton(self.skin_tab)
+        self.export_skin_btn.setText("Export Skin")
+        self.export_skin_btn.move(10, 440)
+        self.export_skin_btn.resize(350, 20)
+
+        self.import_skin_btn = QtWidgets.QPushButton(self.skin_tab)
+        self.import_skin_btn.setText("Import Skin")
+        self.import_skin_btn.move(10, 465)
+        self.import_skin_btn.resize(350, 20)
+    
 
 
         
@@ -374,12 +393,12 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.h_aim_at_btn.clicked.connect(self.ui_aim_at)
         self.dumb_copy_orient_btn.clicked.connect(self.ui_dumb_copy_orient)
         self.smart_copy_orient_btn.clicked.connect(self.ui_smart_copy_orient)
-
         self.mirror_axes.currentText()
         self.choose_mirror_axis_btn.clicked.connect(self.ui_mirror_control)
         self.rip_skin_btn.clicked.connect(self.ui_rip_skin_btn)
-
         self.h_deform_btn.clicked.connect(self.ui_bake_deltas)
+        self.export_skin_btn.clicked.connect(self.ui_export_skin)
+        self.import_skin_btn.clicked.connect(self.ui_import_skin)
 
 
         return
@@ -512,6 +531,7 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         
         return
     
+
     def ui_rip_skin_attrs(self):
         if not self.get_source_mesh.text():
             source_mesh = pm.ls(selection = True)[0]
@@ -525,9 +545,11 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         
         return(source_mesh, target_mesh)
 
+
     def ui_rip_skin_btn(self):
         skinning.rip_skin(self.ui_rip_skin_attrs()[0], self.ui_rip_skin_attrs()[1], 
                         self.match_by_options.currentIndex(), self.influence_options.currentIndex())
+
 
     def ui_bake_deltas(self):
         if not self.get_new_geo.text():
@@ -540,6 +562,15 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
             
         deform.deltas_to_tweak(new_geo, old_geo, self.get_tweak_node.text())
 
+
+    def ui_export_skin(self):
+        skinning.serialise_skin(self.get_file_name.text(), option = 0)
+
+
+    def ui_import_skin(self):
+        skinning.serialise_skin(self.get_file_name.text(), option = 1)
+
+    
 
 def run():
     """displays windows"""

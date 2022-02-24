@@ -9,6 +9,7 @@ from . import skeleton as sk
 
 from . import progbar as pb
 from . import skeleton as sk
+from . import json_utils
 
 import maya.mel as mel
 
@@ -277,6 +278,44 @@ def get_skinCluster_info(vertices, skinCluster):
         return verticeDict
     else:
         pm.error("No Vertices or SkinCluster passed.")
+    
+
+def serialise_skin(name = None, option = 0):
+    """Save skinning data by vertex id and influence in a json
+        params: name(str): default -> skinWeights.json
+        Gets mesh by selection
+    """
+
+    #get mesh by selection
+    mesh = pm.ls(sl=True)[0]
+
+    #get mesh info
+    info = get_info(mesh, mesh)
+    data = info[0]
+
+    #set mesh info into variables
+    skin = data['skinCluster']
+    shape = data['shapeNode']
+    vtx = data['vertex']
+    joints = data['joints']
+
+    #get skin cluster
+    skin_info = get_skinCluster_info(vtx, skin)
+
+    #set file name   
+    temp_file_name = name + "skinWeights.json" 
+
+    #option 0 is for export, and saves data in json library
+    if option == 0:
+
+        json_utils.export_influences(mesh, vtx, skin, temp_file_name)
+        
+    #option 1 is for import, and retrieves data from json library
+    else:     
+
+        json_utils.import_influences(mesh, skin, temp_file_name)
+    
+    return
     
 
 def rip_skin(source_mesh = None, target_mesh = None, match_option = 0, influence = 0):
