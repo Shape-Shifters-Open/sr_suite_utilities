@@ -1,4 +1,4 @@
-# coord_math.py
+ # coord_math.py
 # Matt Riche 2021
 # some 3D math custom formulas to help sr_suite_utilities
 
@@ -51,7 +51,7 @@ def get_average_xform(nodes):
         component_id = get_component_ID(selection)
         meshDagPath = selection.getDagPath(0)
         mFnMesh = om.MFnMesh(meshDagPath)
-        new_point = mFnMesh.getPoint(component_id[0], om.MSpace.kWorld)
+        new_point = mFnMesh.getPoint(component_id[0], om.MSpace.kWorld) 
 
         print (new_point)
         x_vals.append(new_point[0])
