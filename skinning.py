@@ -71,7 +71,7 @@ def copy_skinweights(source="", target=""):
     return 
 
 
-def find_related_skinCluster(node=None):
+def find_related_skinCluster(node = None):
     '''
     find_related_skinCluster
     Finds a relative of the type "skinCluster".
@@ -90,6 +90,8 @@ def find_related_skinCluster(node=None):
 
     print ("Checking {}'s connections...".format(node))
     skin_cluster = None
+    pm.select(node)
+    node = pm.ls(selection = True)[0]
     for nodes in node.getShape().connections():
         if nodes.nodeType() == 'skinCluster':
             print ("Found {}.".format(nodes))
@@ -186,7 +188,7 @@ def save_skin():
         pass
 
 
-def rip_skin(source_mesh=None, target_mesh=None):
+def get_info(source_mesh=None, target_mesh=None):
     '''
     rip_skin
     Copies skinning from one mesh to another, using duplicated joints instead of the same ones.
@@ -198,10 +200,6 @@ def rip_skin(source_mesh=None, target_mesh=None):
     If source_mesh and target_mesh aren't specificed, function will resort to selection.
     '''
 
-    if(source_mesh == None):
-
-        source_mesh = pm.ls(sl=True)[0]
-        target_mesh = pm.ls(sl=True)[1]
 
     # Get the skincluster and list of influences on the source mesh
     old_skinCluster = find_related_skinCluster(node=source_mesh)
@@ -210,6 +208,27 @@ def rip_skin(source_mesh=None, target_mesh=None):
     # Get the skincluster and the list of influences on the new mesh
     new_skinCluster = find_related_skinCluster(node=target_mesh)
     new_joints = select_bound_joints(node=target_mesh)
+
+    #get shape nodes
+    old_shapeNode = pm.listRelatives(source_mesh, shapes = True)[0]
+    new_shapeNode = pm.listRelatives(target_mesh, shapes = True)[0]
+    
+    #get vertices
+    source_vertex = pm.ls(source_mesh+'.vtx[*]', fl=True)
+    target_vertex = pm.ls(target_mesh+'.vtx[*]', fl=True)
+
+    source_vtx = []
+    target_vtx = []
+
+    
+
+    for k in source_vertex:
+        source_vtx.append(str(k))
+    
+    for k in target_vertex:
+        target_vtx.append(str(k))
+    
+    print ("source_vtx", source_vtx)
 
     # Make a list of just the joint names for comparision
     old_names=[]
@@ -224,3 +243,86 @@ def rip_skin(source_mesh=None, target_mesh=None):
             
     # Now new_joint and old_joints should have contents with the same names... let's check how much
     # they do or do not match.
+    source_data = {'skinCluster': old_skinCluster, 
+                    'shapeNode': old_shapeNode,
+                    'vertex': source_vtx,
+                    'joints': old_joints}
+    target_data = {'skinCluster': new_skinCluster, 
+                    'shapeNode': new_shapeNode,
+                    'vertex': target_vtx,
+                    'joints': old_joints}
+    return (source_data, target_data)
+
+
+def get_skinCluster_info(vertices, skinCluster):
+
+    if len(vertices) != 0 and skinCluster != "":
+        verticeDict = {}
+        
+        for vtx in vertices:
+            influenceVals = pm.skinPercent(skinCluster, vtx, 
+                                             q=1, v=1, ib=0.001)
+            
+            influenceNames = pm.skinPercent(skinCluster, vtx, 
+                                              transform=None, q=1, 
+                                              ib=0.001) 
+                        
+            verticeDict[vtx] = zip(influenceNames, influenceVals)
+        
+        return verticeDict
+    else:
+        pm.error("No Vertices or SkinCluster passed.")
+    
+
+def rip_skin(source_mesh = None, target_mesh = None, match_option = 0, influence = 0):
+    """select source mesh, target mesh and run this to copy skin
+        params:
+            source mesh (str): either by selection or input
+            target mesh (str): either by selection or input
+            match option (int): 0 -> closest point, 1 -> UVs
+            influence(int): 0 -> closest joint, 1 -> name
+    """
+    
+    if(source_mesh == None):
+        #checks if source mesh exists and selects 
+
+        source_mesh = pm.ls(sl=True)[0]
+        target_mesh = pm.ls(sl=True)[1]
+
+    pm.select(source_mesh, target_mesh)
+
+    print ("ripping skin")
+    if influence == 0:
+        if match_option == 0:
+            #if the options selected are closest points and closest joint
+            pm.copySkinWeights(surfaceAssociation = "closestPoint", 
+                                influenceAssociation = "closestJoint", noMirror = True)
+        else:
+            #if the options selected are uv and closest joint
+            pm.copySkinWeights(surfaceAssociation = "closestPoint", uvSpace = ['map1', 'map1'], 
+                                influenceAssociation = "closestJoint", noMirror = True)
+    else:
+        joints = select_bound_joints(node = source_mesh)
+        pm.select(joints)
+        strip = pm.selected()[0].namespace()
+        for jnt in joints:
+            #stripping namespace
+            name = jnt.replace(strip, "")
+            pm.rename(jnt, name)
+        if match_option == 0:
+            #if the options selected are closest points and namespace
+            pm.copySkinWeights(surfaceAssociation = "closestPoint", 
+                                influenceAssociation = "name", noMirror = True)
+        else:
+            #if the options selected are uv and namespace
+            pm.copySkinWeights(surfaceAssociation = "closestPoint", uvSpace = ['map1', 'map1'], 
+                                influenceAssociation = "name", noMirror = True)
+        
+        for jnt in joints:
+            name = jnt
+            if "|" in jnt:
+                #adding namespace back
+                name = jnt.split("|")[-1]
+            pm.rename(jnt, strip + name)
+    
+    return
