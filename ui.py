@@ -212,10 +212,32 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         # Deform Tab tab
         self.deform_tab = QtWidgets.QWidget()
         self.tools_tab.addTab(self.deform_tab, "Deform")
-        
-        # To get bake-delta-to-tweak button ready...
-        # we just call deform.deltas_to_tweak(pm.PyNode(new geo), pm.PyNode(old geo), pm.PyNode(tweak))
-        # Those three args need to be acquired by UI?
+
+        self.new_geo_txtbox = QtWidgets.QLabel(self.deform_tab)
+        self.new_geo_txtbox.setText("Input New Geo")
+        self.new_geo_txtbox.move(10, 21)
+        self.get_new_geo = QtWidgets.QLineEdit(self.deform_tab)
+        self.get_new_geo.move(150, 21)
+        self.get_new_geo.resize(210, 20)
+
+        self.new_geo_txtbox = QtWidgets.QLabel(self.deform_tab)
+        self.new_geo_txtbox.setText("Input Old Geo")
+        self.new_geo_txtbox.move(10, 42)
+        self.get_old_geo = QtWidgets.QLineEdit(self.deform_tab)
+        self.get_old_geo.move(150, 42)
+        self.get_old_geo.resize(210, 20)
+
+        self.tweak_node = QtWidgets.QLabel(self.deform_tab)
+        self.tweak_node.setText("Input Tweak Node")
+        self.tweak_node.move(10, 63)
+        self.get_tweak_node = QtWidgets.QLineEdit(self.deform_tab)
+        self.get_tweak_node.move(150, 63)
+        self.get_tweak_node.resize(210, 20)
+
+        self.h_deform_btn = QtWidgets.QPushButton(self.deform_tab)
+        self.h_deform_btn.setText("Bake Deltas")
+        self.h_deform_btn.move(10, 84)
+        self.h_deform_btn.resize(360, 20)
 
 
         return
@@ -276,6 +298,7 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.h_aim_at_btn.clicked.connect(self.ui_aim_at)
         self.dumb_copy_orient_btn.clicked.connect(self.ui_dumb_copy_orient)
         self.smart_copy_orient_btn.clicked.connect(self.ui_smart_copy_orient)
+        self.h_deform_btn.clicked.connect(self.ui_bake_deltas)
 
         return
 
@@ -400,6 +423,16 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
         return
 
+    def ui_bake_deltas(self):
+        if not self.get_new_geo.text():
+            geo = pm.ls(selection = True)
+            new_geo = geo[0]
+            old_geo = geo[1]
+        else:
+            new_geo = self.get_new_geo.text()
+            old_geo = self.get_old_geo.text()
+            
+        deform.deltas_to_tweak(new_geo, old_geo, self.get_tweak_node.text())
 
 def run():
     """displays windows"""
