@@ -36,7 +36,6 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
     def __init__(self, parent=maya_main_window()):
         super(MainDialog, self).__init__(parent)
-        self.setWindowTitle("Shaper Rigs Suite Utilities v0.1.08")
         self.setWindowTitle("Shaper Rigs Suite Utilities v{}".format(globals.srsu_version))
         self.setMinimumWidth(400)
         self.setMinimumHeight(600)
@@ -96,10 +95,12 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.get_file_name = QtWidgets.QLabel(self.skin_tab)
         self.get_file_name.setText("Input File Name")
         self.get_file_name = QtWidgets.QLineEdit(self.skin_tab)
+        self.get_file_name.move(10, 415)
         self.get_file_name.resize(350, 20)
 
         self.export_skin_btn = QtWidgets.QPushButton(self.skin_tab)
         self.export_skin_btn.setText("Export Skin")
+        self.export_skin_btn.move(10, 440)
         self.export_skin_btn.resize(350, 20)
 
         self.import_skin_btn = QtWidgets.QPushButton(self.skin_tab)

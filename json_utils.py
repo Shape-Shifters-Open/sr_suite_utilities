@@ -1,7 +1,8 @@
 import pymel.core as pm
-import skinning as sn
 
 import json 
+
+from . import skinning as sn
 
 
 def write_json(contents, name):

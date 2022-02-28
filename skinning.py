@@ -3,11 +3,9 @@
 # sr_suite_utilities module for skinning related operations.
 
 import pymel.core as pm
-
 from . import progbar as pb
 from . import skeleton as sk
 import maya.mel as mel
-
 from . import json_utils
 
 def copy_skinweights(source="", target=""):
