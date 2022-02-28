@@ -28,4 +28,3 @@ NAME_STANDARD = {
     }
 
 }
-

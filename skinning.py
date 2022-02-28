@@ -6,13 +6,9 @@ import pymel.core as pm
 
 from . import progbar as pb
 from . import skeleton as sk
-
-from . import progbar as pb
-from . import skeleton as sk
-from . import json_utils
-
 import maya.mel as mel
 
+from . import json_utils
 
 def copy_skinweights(source="", target=""):
     '''
@@ -234,7 +230,8 @@ def get_info(source_mesh=None, target_mesh=None):
     for k in target_vertex:
         target_vtx.append(str(k))
     
-    print "source_vtx", source_vtx
+
+    print ("source_vtx", source_vtx)
 
     # Make a list of just the joint names for comparision
     old_names=[]
@@ -273,7 +270,7 @@ def get_skinCluster_info(vertices, skinCluster):
                                               transform=None, q=1, 
                                               ib=0.001) 
                         
-            verticeDict[vtx] = zip(influenceNames, influenceVals)
+            verticeDict[vtx] = list(zip(influenceNames, influenceVals))
         
         return verticeDict
     else:
