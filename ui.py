@@ -92,10 +92,11 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
         #export/import skin
 
-        self.get_file_name = QtWidgets.QLabel(self.skin_tab)
-        self.get_file_name.setText("Input File Name")
+        self.file_label = QtWidgets.QLabel(self.skin_tab)
+        self.file_label.setText("Input File Name")
+        self.file_label.move(10 , 410)
         self.get_file_name = QtWidgets.QLineEdit(self.skin_tab)
-        self.get_file_name.move(10, 415)
+        self.get_file_name.move(100 , 415)
         self.get_file_name.resize(350, 20)
 
         self.export_skin_btn = QtWidgets.QPushButton(self.skin_tab)
@@ -108,23 +109,7 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.import_skin_btn.move(10, 465)
         self.import_skin_btn.resize(350, 20)
 
-        #export/import skin
-
-        self.get_file_name = QtWidgets.QLabel(self.skin_tab)
-        self.get_file_name.setText("Input File Name")
-        self.get_file_name = QtWidgets.QLineEdit(self.skin_tab)
-        self.get_file_name.move(10, 415)
-        self.get_file_name.resize(350, 20)
-
-        self.export_skin_btn = QtWidgets.QPushButton(self.skin_tab)
-        self.export_skin_btn.setText("Export Skin")
-        self.export_skin_btn.move(10, 440)
-        self.export_skin_btn.resize(350, 20)
-
-        self.import_skin_btn = QtWidgets.QPushButton(self.skin_tab)
-        self.import_skin_btn.setText("Import Skin")
-        self.import_skin_btn.move(10, 465)
-        self.import_skin_btn.resize(350, 20)
+        
 
         # Heirachy Tab (Some of this is from "controllers.py")
         self.hierarchy_tab = QtWidgets.QWidget()

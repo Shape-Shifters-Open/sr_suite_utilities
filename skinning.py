@@ -3,16 +3,17 @@
 # sr_suite_utilities module for skinning related operations.
 
 import pymel.core as pm
-from . import progbar as pb
-from . import skeleton as sk
+from . import progbar
+from . import skeleton
 import maya.mel as mel
 from . import json_utils
+from . import progbar as prg
 
 def copy_skinweights(source="", target=""):
     '''
     copy_skinweights
 
-    Copy the skin influences from a source (even between unlike pieces of geo) to any number of 
+    Copy the skin influences from a source (even between unlike pieces of geo) to any numbe  r of 
     targets.
 
     usage:
@@ -38,7 +39,7 @@ def copy_skinweights(source="", target=""):
     joints = select_bound_joints(source)
 
     # Start a progress bar
-    pb.start_progbar(
+    progbar.start_progbar(
         max_value=len(target), message="Copying skins from {} to target(s)".format(source)
         )
 
@@ -52,21 +53,21 @@ def copy_skinweights(source="", target=""):
             pm.skinCluster(geo.name(), joints, omi=False, tsb=True)
         except:
             print ("{} already has a skinCluster on it...".format(geo.name()))
-            pb.update_progbar()
+            progbar.update_progbar()
             continue
 
         try:
             dest_skin = find_related_skinCluster(geo)
         except:
             print ("{} already has a skinCluster on it...".format(dest_skin))
-            pb.update_progbar()
+            progbar.update_progbar()
             continue
         pm.copySkinWeights(ss=sourceSkin, ds=dest_skin, noMirror=True, sm=True)
-        pb.update_progbar()
+        progbar.update_progbar()
         count += 1
 
     print ("Done.  Copied skins to {} target geos.".format(count))
-    pb.end_progbar()
+    progbar.end_progbar()
 
     return 
 
@@ -301,14 +302,14 @@ def serialise_skin(name = None, option = 0):
     temp_file_name = name + "skinWeights.json" 
 
     #option 0 is for export, and saves data in json library
-    if option == 0:
+    if option == 0:   
 
-        json_utils.export_influences(mesh, vtx, skin, temp_file_name)
+        export_influences(mesh, vtx, skin, temp_file_name)
         
     #option 1 is for import, and retrieves data from json library
     else:     
 
-        json_utils.import_influences(mesh, skin, temp_file_name)
+        import_influences(mesh, skin, temp_file_name)
     
     return
     
@@ -364,4 +365,102 @@ def rip_skin(source_mesh = None, target_mesh = None, match_option = 0, influence
                 name = jnt.split("|")[-1]
             pm.rename(jnt, strip + name)
     
+    return
+
+def export_influences(geo, vtx, skinCluster, name):
+    """
+    condenses given data into dictionary and stores in json file
+    params:
+        geo(str)
+        vtx(list)
+        skinCluster(str)
+        name(str)
+    """
+    path = pm.fileDialog2(caption="Select folder to save json", dialogStyle=1, fileMode=3)
+
+    #dictionary storing all vertex and influence data   
+    verticeDict = get_skinCluster_info(vertices=vtx,
+                                            skinCluster=skinCluster)
+
+    prg.start_progbar(max_value = len(verticeDict), message="Getting vertex data")
+
+        
+    
+    #strip joint namespace
+    for influence in verticeDict:
+        defaults = ['UI', 'shared']
+        namespaces = (ns for ns in pm.namespaceInfo(lon=True) if ns not in defaults)
+        namespaces = (pm.Namespace(ns) for ns in namespaces)
+        for ns in namespaces:
+            ns.remove() 
+
+
+    #check if influences exist and store in json file
+    if len(verticeDict) >= 1:
+        json_utils.write_json(contents=verticeDict, directory = path, name=name)
+        prg.update_progbar()
+
+        print ("{0} vertices info was written to JSON file".format(len(verticeDict)))
+        return name
+
+    else:
+        pm.error("No vertices selected to write to JSON")
+
+    prg.end_progbar()
+    
+    return path
+
+def import_influences(geo = None, skinCluster = None, name = None):
+    """
+    accesses and parses data from json file
+
+    params:
+        geo(str)
+        skinCluster(str)
+        name(str)
+    """
+
+    print ("Accessing {0}".format(name))
+
+    path = pm.fileDialog2(caption="Select folder with json", dialogStyle=1, fileMode=3)
+    
+    vertData = json_utils.read_json(name = name, directory = path)   
+    print (vertData)
+    prg.start_progbar(max_value = len(vertData), message="Importing Influence Data")
+    
+    if len(vertData) > 0:
+        
+        #for each vertex, set influence using skinpercent
+        for key in vertData.keys():
+            
+            #change vertex to target name
+            keys = key.split("Shape")
+            new_name = geo + "Shape" + keys[1]
+
+            try:
+                #get joint from joint heirarchy    
+                jnt = vertData[key][0][0]
+                if "|" in jnt:
+                    jnt = vertData[key][0][0].split("|")[-1]
+                    vertData[key][0][0] = jnt
+                    prg.update_progbar()
+
+                #print ("skin cluster {0}".format(skinCluster))
+                #print ("key {0}".format(new_name))
+                #print ("value {0}".format(vertData[key][0]))
+                
+                #changing skin influence
+                pm.skinPercent(skinCluster, new_name, tv=vertData[key][0], zri=1)
+
+                prg.update_progbar()
+
+            except:
+                pm.error("Something went wrong with the skinning")
+        print ("{0} vertices were set to specificed values.".format(len(vertData.keys())))
+        
+    else:
+        pm.error("JSON File was empty")
+    
+    prg.end_progbar()
+
     return
