@@ -150,6 +150,23 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
         #self.tools_tab.setCurrentIndex(0)
 
+         #     mirror control
+        self.h_choose_axis_txtbox = QtWidgets.QLabel(self.controls_tab)
+        self.h_choose_axis_txtbox.setText("Choose mirror axis")
+        self.h_choose_axis_txtbox.move(10, 120)
+        self.h_choose_axis_txtbox.resize(150, 30)
+        self.mirror_axes = QtWidgets.QComboBox(self.controls_tab)
+        self.mirror_axes.move(110, 125)
+        self.mirror_axes.resize(40, 20)
+        self.mirror_axes.addItem('X')
+        self.mirror_axes.addItem('Y')
+        self.mirror_axes.addItem('Z')
+        self.choose_mirror_axis_btn = QtWidgets.QPushButton(self.controls_tab)
+        self.choose_mirror_axis_btn.setText("Mirror Control")
+        self.choose_mirror_axis_btn.move(160, 125)
+        self.choose_mirror_axis_btn.resize(190, 20)
+
+
         # Transforms tab
         self.transforms_tab = QtWidgets.QWidget()
         self.tools_tab.addTab(self.transforms_tab, "Transforms")
@@ -299,6 +316,8 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.dumb_copy_orient_btn.clicked.connect(self.ui_dumb_copy_orient)
         self.smart_copy_orient_btn.clicked.connect(self.ui_smart_copy_orient)
         self.h_deform_btn.clicked.connect(self.ui_bake_deltas)
+        self.mirror_axes.currentText()
+        self.choose_mirror_axis_btn.clicked.connect(self.ui_mirror_control)
 
         return
 
@@ -433,6 +452,10 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
             old_geo = self.get_old_geo.text()
             
         deform.deltas_to_tweak(new_geo, old_geo, self.get_tweak_node.text())
+
+    def ui_mirror_control(self):
+        all_control_options.get_controls(self.mirror_axes.currentText())
+
 
 def run():
     """displays windows"""
