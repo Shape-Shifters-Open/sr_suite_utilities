@@ -24,13 +24,13 @@ def write_json(contents, directory, name):
     return path
 
 
-def read_json(name, directory):
+def read_json(directory):
     """retrieves data from given json file name
         params: 
                 name(str)
     """
 
-    path = directory[0] + "/" + name
+    path = directory
     try:
       with open(path, 'r') as jsonFile:
           return json.load(jsonFile)

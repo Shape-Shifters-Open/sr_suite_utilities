@@ -422,9 +422,9 @@ def import_influences(geo = None, skinCluster = None, name = None):
 
     print ("Accessing {0}".format(name))
 
-    path = pm.fileDialog2(caption="Select folder with json", dialogStyle=1, fileMode=3)
+    path = pm.fileDialog2(caption="Select json file", dialogStyle=1, fileMode=1)[0]
     
-    vertData = json_utils.read_json(name = name, directory = path)   
+    vertData = json_utils.read_json(directory = path)   
     print (vertData)
     prg.start_progbar(max_value = len(vertData), message="Importing Influence Data")
     

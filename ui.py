@@ -93,20 +93,25 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         #export/import skin
 
         self.file_label = QtWidgets.QLabel(self.skin_tab)
+        self.file_label.setText("Rip Skin Tool")
+        self.file_label.move(10 , 165)
+        self.file_label.setStyleSheet("font: bold 14px;")
+
+        self.file_label = QtWidgets.QLabel(self.skin_tab)
         self.file_label.setText("Input File Name")
-        self.file_label.move(10 , 410)
+        self.file_label.move(10 , 185)
         self.get_file_name = QtWidgets.QLineEdit(self.skin_tab)
-        self.get_file_name.move(100 , 415)
-        self.get_file_name.resize(350, 20)
+        self.get_file_name.move(100 , 190)
+        self.get_file_name.resize(261, 20)
 
         self.export_skin_btn = QtWidgets.QPushButton(self.skin_tab)
         self.export_skin_btn.setText("Export Skin")
-        self.export_skin_btn.move(10, 440)
+        self.export_skin_btn.move(10, 215)
         self.export_skin_btn.resize(350, 20)
 
         self.import_skin_btn = QtWidgets.QPushButton(self.skin_tab)
         self.import_skin_btn.setText("Import Skin")
-        self.import_skin_btn.move(10, 465)
+        self.import_skin_btn.move(10, 240)
         self.import_skin_btn.resize(350, 20)
 
         
