@@ -158,9 +158,10 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.mirror_axes = QtWidgets.QComboBox(self.controls_tab)
         self.mirror_axes.move(110, 125)
         self.mirror_axes.resize(40, 20)
-        self.mirror_axes.addItem('X')
-        self.mirror_axes.addItem('Y')
-        self.mirror_axes.addItem('Z')
+        self.mirror_axes.addItem('XZ')
+        self.mirror_axes.addItem('XY')
+        self.mirror_axes.addItem('YZ')
+        self.mirror_axes.setCurrentIndex(2)
         self.choose_mirror_axis_btn = QtWidgets.QPushButton(self.controls_tab)
         self.choose_mirror_axis_btn.setText("Mirror Control")
         self.choose_mirror_axis_btn.move(160, 125)
@@ -454,7 +455,7 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         deform.deltas_to_tweak(new_geo, old_geo, self.get_tweak_node.text())
 
     def ui_mirror_control(self):
-        all_control_options.get_controls(self.mirror_axes.currentText())
+        all_control_options.get_controls(self.mirror_axes.currentIndex())
 
 
 def run():

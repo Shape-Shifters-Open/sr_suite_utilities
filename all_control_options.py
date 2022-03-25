@@ -132,9 +132,12 @@ def mirror_controls(controls, axis):
                 axis: mirrors on given axis
     """
     #temp side axis dictionary
-    axis_dict = {"X": "Z",
-                "Y": "X",
-                "Z":"Y"}
+    axis_main = {0: "X",
+                1: "Z",
+                2:"Y"}
+    axis_plane = {0: "Z",
+                1: "Y",
+                2:"X"}
     for control in controls:
         #for temporary naming
         name = str(control) 
@@ -147,9 +150,9 @@ def mirror_controls(controls, axis):
         #parents to world space transform for mirroring
         pm.parent(dup, parent_group)
         #rotates and scales 
-        current_rot = pm.getAttr(parent_group + ".rotate" + axis)
-        pm.setAttr(parent_group + ".rotate" + axis, current_rot + 180)
-        pm.setAttr(parent_group + ".scale" + axis_dict[axis], -1)
+        current_rot = pm.getAttr(parent_group + ".rotate" + axis_main[axis])
+        pm.setAttr(parent_group + ".rotate" + axis_main[axis], current_rot + 180)
+        pm.setAttr(parent_group + ".scale" + axis_plane[axis], -1)
 
         #checks if control is parented to world
         shape = pm.listRelatives(dup, shapes=True)
