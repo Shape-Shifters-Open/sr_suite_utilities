@@ -24,6 +24,7 @@ from . import dict_lib
 from . import all_control_options
 from . import orientation
 from . import deform
+from . import vehicle
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
 
@@ -291,6 +292,17 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.h_deform_btn.move(10, 84)
         self.h_deform_btn.resize(360, 20)
 
+        # Vehicle tab
+        self.vehicle_tab = QtWidgets.QWidget()
+        self.tools_tab.addTab(self.vehicle_tab, "Vehicles")
+
+        self.import_vetala_btn = QtWidgets.QPushButton(self.vehicle_tab)
+        self.import_vetala_btn.setText("Import Vetala")
+        self.vetala_control_maker_btn = QtWidgets.QPushButton(self.vehicle_tab)
+        self.vetala_control_maker_btn.setText("Vetala control maker")
+ 
+
+
 
         return
 
@@ -329,6 +341,11 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         # Create Transforms Tab layout:
         transforms_tab_layout = QtWidgets.QFormLayout(self.transforms_tab)
 
+        # Create vehicle tab layout
+        vehicle_tab_layout = QtWidgets.QFormLayout(self.vehicle_tab)
+        vehicle_tab_layout.addRow(self.import_vetala_btn)
+        vehicle_tab_layout.addRow(self.vetala_control_maker_btn)
+
         return
 
 
@@ -352,6 +369,8 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.smart_copy_orient_btn.clicked.connect(self.ui_smart_copy_orient)
         self.rip_skin_btn.clicked.connect(self.ui_rip_skin_btn)
         self.h_deform_btn.clicked.connect(self.ui_bake_deltas)
+        self.import_vetala_btn.clicked.connect(self.ui_vetala_btn)
+        self.vetala_control_maker_btn.clicked.connect(self.ui_vetala_control_maker)
 
         return
 
@@ -505,6 +524,16 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         skinning.rip_skin(self.ui_rip_skin_attrs()[0], self.ui_rip_skin_attrs()[1], 
                         self.match_by_options.currentIndex(), self.influence_options.currentIndex())
 
+
+    def ui_vetala_btn(self):
+        print ("calling vetala")
+        vehicle.vetala_importer()
+    
+
+    def ui_vetala_control_maker(self):
+        print ("calling vetala ctrl maker")
+        vehicle.vetala_controls()
+        
 
 def run():
     """displays windows"""
