@@ -267,7 +267,7 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.tools_tab.addTab(self.deform_tab, "Deform")
 
         self.new_geo_txtbox = QtWidgets.QLabel(self.deform_tab)
-        self.new_geo_txtbox.setText("Input New Geo")
+        self.new_geo_txtbox.setText("Input New Geo") 
         self.new_geo_txtbox.move(10, 21)
         self.get_new_geo = QtWidgets.QLineEdit(self.deform_tab)
         self.get_new_geo.move(150, 21)
@@ -296,10 +296,37 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.vehicle_tab = QtWidgets.QWidget()
         self.tools_tab.addTab(self.vehicle_tab, "Vehicles")
 
-        self.import_vetala_btn = QtWidgets.QPushButton(self.vehicle_tab)
-        self.import_vetala_btn.setText("Import Vetala")
-        self.vetala_control_maker_btn = QtWidgets.QPushButton(self.vehicle_tab)
-        self.vetala_control_maker_btn.setText("Vetala control maker")
+        self.wheel_up_label = QtWidgets.QLabel(self.vehicle_tab)
+        self.wheel_up_label.setText("Wheel Up")
+        self.wheel_up_label.move(10, 30)
+        self.wheel_up_enum = QtWidgets.QComboBox(self.vehicle_tab)
+        self.wheel_up_enum.move(65, 27)
+        self.wheel_up_enum.resize(33, 20)
+        self.wheel_up_enum.addItem('x')
+        self.wheel_up_enum.addItem('y')
+        self.wheel_up_enum.addItem('z')
+        self.wheel_up_enum.setCurrentIndex(1)
+
+        self.wheel_rotate_label = QtWidgets.QLabel(self.vehicle_tab)
+        self.wheel_rotate_label.setText("Wheel Rotate")
+        self.wheel_rotate_label.move(115, 30)
+        self.wheel_rotate_enum = QtWidgets.QComboBox(self.vehicle_tab)
+        self.wheel_rotate_enum.move(190, 27)
+        self.wheel_rotate_enum.resize(33, 20)
+        self.wheel_rotate_enum.addItem('x')
+        self.wheel_rotate_enum.addItem('y')
+        self.wheel_rotate_enum.addItem('z')
+        self.wheel_rotate_enum.setCurrentIndex(0)
+
+        self.build_wheel_btn = QtWidgets.QPushButton(self.vehicle_tab)
+        self.build_wheel_btn.setText("Build Wheel")
+        self.build_wheel_btn.move(10, 51)
+        self.build_wheel_btn.resize(360, 20)
+        self.reverse_wheel_btn = QtWidgets.QPushButton(self.vehicle_tab)
+        self.reverse_wheel_btn.setText("Reverse Wheel")
+        self.reverse_wheel_btn.move(10, 75)
+        self.reverse_wheel_btn.resize(360, 20)
+        
  
 
 
@@ -341,10 +368,6 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         # Create Transforms Tab layout:
         transforms_tab_layout = QtWidgets.QFormLayout(self.transforms_tab)
 
-        # Create vehicle tab layout
-        vehicle_tab_layout = QtWidgets.QFormLayout(self.vehicle_tab)
-        vehicle_tab_layout.addRow(self.import_vetala_btn)
-        vehicle_tab_layout.addRow(self.vetala_control_maker_btn)
 
         return
 
@@ -369,8 +392,9 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.smart_copy_orient_btn.clicked.connect(self.ui_smart_copy_orient)
         self.rip_skin_btn.clicked.connect(self.ui_rip_skin_btn)
         self.h_deform_btn.clicked.connect(self.ui_bake_deltas)
-        self.import_vetala_btn.clicked.connect(self.ui_vetala_btn)
-        self.vetala_control_maker_btn.clicked.connect(self.ui_vetala_control_maker)
+        self.build_wheel_btn.clicked.connect(self.ui_build_wheel)
+        self.reverse_wheel_btn.clicked.connect(self.ui_reverse_wheel)
+        
 
         return
 
@@ -525,14 +549,12 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
                         self.match_by_options.currentIndex(), self.influence_options.currentIndex())
 
 
-    def ui_vetala_btn(self):
-        print ("calling vetala")
-        vehicle.vetala_importer()
-    
+    def ui_build_wheel(self):
+        vehicle.wheel_builder(self.wheel_up_enum.currentIndex(), self.wheel_rotate_enum.currentIndex(), wheel_type = 0)
 
-    def ui_vetala_control_maker(self):
-        print ("calling vetala ctrl maker")
-        vehicle.vetala_controls()
+    def ui_reverse_wheel(self):
+        vehicle.wheel_builder(self.wheel_up_enum.currentIndex(), self.wheel_rotate_enum.currentIndex(), wheel_type = 1)
+    
         
 
 def run():
