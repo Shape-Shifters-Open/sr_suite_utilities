@@ -2,6 +2,8 @@
 # Matt Riche 2021
 # Shaper Rigs in-suite UI.
 
+
+
 from pickletools import long4
 from pymel.core.datatypes import Vector
 import maya.OpenMayaUI as omui
@@ -12,6 +14,9 @@ from PySide2 import QtCore, QtWidgets, QtGui
 from shiboken2 import wrapInstance
 import gc
 import sys
+
+
+
 
 # From related modules:
 
@@ -24,7 +29,13 @@ from . import dict_lib
 from . import all_control_options
 from . import orientation
 from . import deform
+from . import vehicle
+
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
+
+
+
+
 
 
 def maya_main_window():
@@ -265,31 +276,35 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.deform_tab = QtWidgets.QWidget()
         self.tools_tab.addTab(self.deform_tab, "Deform")
 
-        self.new_geo_txtbox = QtWidgets.QLabel(self.deform_tab)
-        self.new_geo_txtbox.setText("Input New Geo")
-        self.new_geo_txtbox.move(10, 21)
-        self.get_new_geo = QtWidgets.QLineEdit(self.deform_tab)
-        self.get_new_geo.move(150, 21)
-        self.get_new_geo.resize(210, 20)
+        # self.new_geo_txtbox = QtWidgets.QLabel(self.deform_tab)
+        # self.new_geo_txtbox.setText("Input New Geo")
+        # self.new_geo_txtbox.move(10, 21)
+        # self.get_new_geo = QtWidgets.QLineEdit(self.deform_tab)
+        # self.get_new_geo.move(150, 21)
+        # self.get_new_geo.resize(210, 20)
 
-        self.new_geo_txtbox = QtWidgets.QLabel(self.deform_tab)
-        self.new_geo_txtbox.setText("Input Old Geo")
-        self.new_geo_txtbox.move(10, 42)
-        self.get_old_geo = QtWidgets.QLineEdit(self.deform_tab)
-        self.get_old_geo.move(150, 42)
-        self.get_old_geo.resize(210, 20)
+        # self.new_geo_txtbox = QtWidgets.QLabel(self.deform_tab)
+        # self.new_geo_txtbox.setText("Input Old Geo")
+        # self.new_geo_txtbox.move(10, 42)
+        # self.get_old_geo = QtWidgets.QLineEdit(self.deform_tab)
+        # self.get_old_geo.move(150, 42)
+        # self.get_old_geo.resize(210, 20)
 
-        self.tweak_node = QtWidgets.QLabel(self.deform_tab)
-        self.tweak_node.setText("Input Tweak Node")
-        self.tweak_node.move(10, 63)
-        self.get_tweak_node = QtWidgets.QLineEdit(self.deform_tab)
-        self.get_tweak_node.move(150, 63)
-        self.get_tweak_node.resize(210, 20)
+        # self.tweak_node = QtWidgets.QLabel(self.deform_tab)
+        # self.tweak_node.setText("Input Tweak Node")
+        # self.tweak_node.move(10, 63)
+        # self.get_tweak_node = QtWidgets.QLineEdit(self.deform_tab)
+        # self.get_tweak_node.move(150, 63)
+        # self.get_tweak_node.resize(210, 20)
 
-        self.h_deform_btn = QtWidgets.QPushButton(self.deform_tab)
-        self.h_deform_btn.setText("Bake Deltas")
-        self.h_deform_btn.move(10, 84)
-        self.h_deform_btn.resize(360, 20)
+        self.h_save_skins = QtWidgets.QPushButton(self.deform_tab)
+        self.h_save_skins.setText("Save Target Skins")
+
+        self.h_bake_deltas = QtWidgets.QPushButton(self.deform_tab)
+        self.h_bake_deltas.setText("Bake Deltas")
+
+        self.h_clean_targets = QtWidgets.QPushButton(self.deform_tab)
+        self.h_clean_targets.setText("Clean Targets")
 
 
         return
@@ -329,6 +344,14 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         # Create Transforms Tab layout:
         transforms_tab_layout = QtWidgets.QFormLayout(self.transforms_tab)
 
+        # Create the deform tab layout:
+        deform_tab_layout = QtWidgets.QFormLayout(self.deform_tab)
+        deform_tab_layout.addRow(self.h_save_skins)
+        deform_tab_layout.addRow(self.h_bake_deltas)
+        deform_tab_layout.addRow(self.h_clean_targets)
+
+  
+
         return
 
 
@@ -351,7 +374,10 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.dumb_copy_orient_btn.clicked.connect(self.ui_dumb_copy_orient)
         self.smart_copy_orient_btn.clicked.connect(self.ui_smart_copy_orient)
         self.rip_skin_btn.clicked.connect(self.ui_rip_skin_btn)
-        self.h_deform_btn.clicked.connect(self.ui_bake_deltas)
+        self.h_save_skins.clicked.connect(self.ui_save_skins)
+        self.h_bake_deltas.clicked.connect(self.ui_bake_deltas)
+        self.h_clean_targets.clicked.connect(self.ui_clean_targets)
+
 
         return
 
@@ -487,6 +513,19 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
             
         deform.deltas_to_tweak(new_geo, old_geo, self.get_tweak_node.text())
 
+    def ui_save_skins(self):
+        deform.save_skins_unbind()
+    
+    def ui_bake_deltas(self):
+        deform.bake_deltas()
+    
+    def ui_clean_targets(self):
+        deform.clean_targets()
+
+
+
+
+
     def ui_rip_skin_attrs(self):
         if not self.get_source_mesh.text():
             source_mesh = pm.ls(selection = True)[0]
@@ -506,8 +545,11 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
                         self.match_by_options.currentIndex(), self.influence_options.currentIndex())
 
 
+
+
 def run():
     """displays windows"""
+    print("running")
 
     for obj in gc.get_objects():
         #checks all objects in scene and verifies whether an instance of the window exists
