@@ -13,7 +13,7 @@ from . import progbar as prg
 from . import skinning
 
 import pymel.core as pm
-
+import maya.cmds as cmds
 import sys
 
 
@@ -135,7 +135,7 @@ def getVtxPos(shapeNode, original) :
     print("getting vtx pos")
     vtxWorldPosition = []    # will contain positions un space of all object vertex
     print("11")
-    vtxIndexList = pm.getAttr(shapeNode + ".vrts", multiIndices=True )
+    vtxIndexList = cmds.getAttr(shapeNode + ".vrts", multiIndices=True )
     print(vtxIndexList)
     print("1")
     for i in vtxIndexList :
