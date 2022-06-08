@@ -122,13 +122,13 @@ def bake_deltas(source_mesh = None, target_mesh = None):
     if tweak_node == None:
         print("cannot find tweak")
         #if tweak node doesn't exist, snaps vertex to position and deletes history
-        source_vtx = pm.ls(source_mesh + '.vtx[*]', fl=True)
-        target_vtx = pm.ls(target_mesh + '.vtx[*]', fl=True)
+        source_vtx = cmds.ls(source_mesh + '.vtx[*]', fl=True)
+        target_vtx = cmds.ls(target_mesh + '.vtx[*]', fl=True)
         for vtx in range(0, len(source_vtx)):
-            pointP =  pm.pointPosition(source_mesh + ".vtx[" + str(vtx) + "]")
-            pm.select(target_mesh + ".vtx[" + str(vtx) + "]")
-            pm.move(pointP[0], pointP[1], pointP[2])
-        pm.delete(target_mesh, constructionHistory = True)
+            pointP =  cmds.pointPosition(source_mesh + ".vtx[" + str(vtx) + "]")
+            cmds.select(target_mesh + ".vtx[" + str(vtx) + "]")
+            cmds.move(pointP[0], pointP[1], pointP[2])
+        cmds.delete(target_mesh, constructionHistory = True)
 
 
 def getVtxPos(shapeNode, original) :
@@ -140,9 +140,9 @@ def getVtxPos(shapeNode, original) :
     print("1")
     for i in vtxIndexList :
         print("2")
-        curPointPosition = pm.xform( str(shapeNode)+".pnts["+str(i)+"]", query=True, translation=True, worldSpace=True )  
+        curPointPosition = cmds.xform( str(shapeNode)+".pnts["+str(i)+"]", query=True, translation=True, worldSpace=True )  
         print("3")
-        curPointPositionOri = pm.xform( str(original)+".pnts["+str(i)+"]", query=True, translation=True, worldSpace=True )     # [1.1269192869360154, 4.5408735275268555, 1.3387055339628269]
+        curPointPositionOri = cmds.xform( str(original)+".pnts["+str(i)+"]", query=True, translation=True, worldSpace=True )     # [1.1269192869360154, 4.5408735275268555, 1.3387055339628269]
         print("4")
         ptdelt =[curPointPosition[0]-curPointPositionOri[0],curPointPosition[1]-curPointPositionOri[1],curPointPosition[2]-curPointPositionOri[2]]
         #if ptdelt[0]!= 0 or ptdelt[1]!= 0 or ptdelt[0]!= 1:
@@ -155,16 +155,16 @@ def getVtxPos(shapeNode, original) :
 def applyDeltaToTweak (shapeNode , original):
     pt = getVtxPos(shapeNode, original)
     print("bake all deformer delta for: ", original)
-    history = pm.listHistory(original,pdo=True)
-    tweakNode = pm.ls(history, type = "tweak")[0]
+    history = cmds.listHistory(original,pdo=True)
+    tweakNode = cmds.ls(history, type = "tweak")[0]
     index =0
     for each in pt:
         #print each
         item = tweakNode+".plist[0].controlPoints["+str(index)+"]"
         #print item
-        pm.setAttr(item+".xValue", each[0])
-        pm.setAttr(item+".yValue", each[1])
-        pm.setAttr(item+".zValue", each[2])
+        cmds.setAttr(item+".xValue", each[0])
+        cmds.setAttr(item+".yValue", each[1])
+        cmds.setAttr(item+".zValue", each[2])
         index+=1
 
 
@@ -182,7 +182,7 @@ def batch_run():
                 ["tgt_f_tal_nrw_body_lod0_meshShape", "f_tal_nrw_body_lod0_meshShape"]            
                 ]"""
     print ("step 1")
-    delt_pairs_list = [["pCubeShape1", "pCubeShape"]]
+    delt_pairs_list = [["pCubeShape1", "pCubeShape2"]]
     print ("step 2")
     for pairs in delt_pairs_list:
         print (pairs)
