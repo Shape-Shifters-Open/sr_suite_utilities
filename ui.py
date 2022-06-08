@@ -549,7 +549,10 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
 
     def ui_build_wheel(self):
-        vehicle.wheel_builder(wheel_up = self.h_wheel_up.currentText(), wheel_rot = self.h_wheel_rot.currentText())
+        all_wheels = pm.ls(selection = True)
+        for wheel in all_wheels:
+            vehicle.wheel_builder(wheel_ctrl = wheel, wheel_up = self.h_wheel_up.currentText(), 
+                                  wheel_rot = self.h_wheel_rot.currentText())
         
 
 def run():

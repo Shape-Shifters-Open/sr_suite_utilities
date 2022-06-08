@@ -6,9 +6,10 @@ import pymel.core as pm
 
 from . import all_control_options
 
-def wheel_builder(wheel_up = "Y", wheel_rot = "X"):
+def wheel_builder(wheel_ctrl = None, wheel_up = "Y", wheel_rot = "X"):
 
-    wheel_ctrl = pm.ls(selection = True)[0]
+    if wheel_ctrl is None:
+        wheel_ctrl = pm.ls(selection = True)[0]
     wheel_drv = pm.listRelatives(wheel_ctrl, p = True)[0]
 
     #establish axes
@@ -83,6 +84,9 @@ def wheel_builder(wheel_up = "Y", wheel_rot = "X"):
     pm.select(ctrl, add = True)
 
     all_control_options.swap_shape()
+
+    pm.select(square_curve)
+    pm.delete()
 
 
 
