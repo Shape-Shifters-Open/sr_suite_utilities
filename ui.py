@@ -329,6 +329,40 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         
  
 
+        #     adding wheel rotate axis label
+        self.h_wheel_rot_label = QtWidgets.QLabel(self.vehicle_tab)
+        self.h_wheel_rot_label.setText("Wheel Rotate")
+        self.h_wheel_rot_label.move(10, 36)
+        self.h_wheel_rot_label.resize(80, 20)
+
+
+        #     adding wheel rotate axis combobox
+        self.h_wheel_rot = QtWidgets.QComboBox(self.vehicle_tab)
+        self.h_wheel_rot.move(81, 36)
+        self.h_wheel_rot.resize(33, 20)
+        self.h_wheel_rot.addItem('X')
+        self.h_wheel_rot.addItem('Y')
+        self.h_wheel_rot.addItem('Z')
+
+        #     adding wheel up axis label
+        self.h_wheel_up_label = QtWidgets.QLabel(self.vehicle_tab)
+        self.h_wheel_up_label.setText("Wheel UP")
+        self.h_wheel_up_label.move(120, 36)
+        self.h_wheel_up_label.resize(80, 20)
+
+        #     adding wheel up axis combobox
+        self.h_wheel_up = QtWidgets.QComboBox(self.vehicle_tab)
+        self.h_wheel_up.move(180, 36)
+        self.h_wheel_up.resize(33, 20)
+        self.h_wheel_up.addItem('X')
+        self.h_wheel_up.addItem('Y')
+        self.h_wheel_up.addItem('Z')
+        self.h_wheel_up.setCurrentIndex(1)
+
+        self.h_build_wheel_btn = QtWidgets.QPushButton(self.vehicle_tab)
+        self.h_build_wheel_btn.setText("Build Auto Wheel")
+        self.h_build_wheel_btn.move(10, 60)
+        self.h_build_wheel_btn.resize(360, 20)
 
 
         return
@@ -369,6 +403,8 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         transforms_tab_layout = QtWidgets.QFormLayout(self.transforms_tab)
 
 
+
+
         return
 
 
@@ -391,10 +427,16 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.dumb_copy_orient_btn.clicked.connect(self.ui_dumb_copy_orient)
         self.smart_copy_orient_btn.clicked.connect(self.ui_smart_copy_orient)
         self.rip_skin_btn.clicked.connect(self.ui_rip_skin_btn)
+
         self.h_deform_btn.clicked.connect(self.ui_bake_deltas)
         self.build_wheel_btn.clicked.connect(self.ui_build_wheel)
         self.reverse_wheel_btn.clicked.connect(self.ui_reverse_wheel)
         
+
+        self.h_build_wheel_btn.clicked.connect(self.ui_build_wheel)
+        
+
+
 
         return
 
@@ -550,11 +592,15 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
 
     def ui_build_wheel(self):
+
         vehicle.wheel_builder(self.wheel_up_enum.currentIndex(), self.wheel_rotate_enum.currentIndex(), wheel_type = 0)
 
     def ui_reverse_wheel(self):
         vehicle.wheel_builder(self.wheel_up_enum.currentIndex(), self.wheel_rotate_enum.currentIndex(), wheel_type = 1)
     
+
+        vehicle.wheel_builder(wheel_up = self.h_wheel_up.currentText(), wheel_rot = self.h_wheel_rot.currentText())
+
         
 
 def run():
