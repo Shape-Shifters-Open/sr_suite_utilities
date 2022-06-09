@@ -47,13 +47,14 @@ def save_skins_unbind():
     step one in baking deltas 
     saves skin cluster in a duplicate node and unbinds skin. 
     runs based on selection
-    """
+    """  
     #takes selection
     old_geo = pm.ls(selection = True)
 
     #duplicates selection, saves skincluster and ubinds original skin
     dup_geo = []
     dup_grp = pm.group(em = True)
+    ex_joint = pm.joint(n = "temp_jnt", p = (0, 0, 0))
     for i in old_geo:
         dup = pm.duplicate(i, n = "dupe" + i)
         hist = pm.listHistory(i, pdo=True)
@@ -65,6 +66,7 @@ def save_skins_unbind():
         skinning.rip_skin(source_mesh = i, target_mesh = dup, match_option = 0, influence = 0)
         pm.parent(dup, dup_grp)
         pm.skinCluster(i, ub = True, e = True)
+        pm.skinCluster(ex_joint, i)
         
     return
 
@@ -78,57 +80,39 @@ def bake_deltas(source_mesh = None, target_mesh = None):
     target_mesh = meshes[0]
     source_mesh = meshes[1]
     
-    nodes = pm.listHistory(target_mesh, pruneDagObjects = True, interestLevel = 1)
-    tweak_node = None
-    for i in nodes:
-        #checks for skincluster and tweak node
-        #if they exist, bakes deltas using the batch run code
-        if 'skinCluster' not in str(i):
-            print("no skin")
-            if 'tweak' in str(i):
-                print ("tweak exists")
-                tweak_node = i
-                pm.select(target_mesh, r = True)
-                pm.select(source_mesh  , add = True)
+    #nodes = pm.listHistory(target_mesh, pruneDagObjects = True, interestLevel = 1)
+    #tweak_node = None
+    
+    pm.select(target_mesh, r = True)
+    pm.select(source_mesh  , add = True)
 
-                try:
-                    batch_run()
-                    print("running batch run")
-                except:
-                    pm.warning("unable to batch run bake deltas script")
-                    pass
-                
-                # try:
-                #     pm.lockNode(source_mesh, l=False, lockUnpublished=False)
-                # except:
-                #     pass 
-                #adds transform node 
+    try:
+        batch_run()
+        print("running batch run")
+    except:
+        pm.warning("unable to batch run bake deltas script")
+        pass
+    
+    # try:
+    #     pm.lockNode(source_mesh, l=False, lockUnpublished=False)
+    # except:
+    #     pass 
+    #adds transform node 
 
-                try:
-                    pm.polyMoveVertex(source_mesh, constructionHistory = 1, random = 0)
-                except:
-                    pm.warning("unable to add transform node, please check if locked")
-                    pass
+    try:
+        pm.polyMoveVertex(source_mesh, constructionHistory = 1, random = 0)
+    except:
+        pm.warning("unable to add transform node, please check if locked")
+        pass
 
-                pm.select(source_mesh)
+    pm.select(source_mesh)
 
-                #bake transform node
-                try:
-                    pm.bakePartialHistory(ppt = True)
-                except:
-                    pm.warning("unable to bake partial history")
-                    pass
-
-    if tweak_node == None:
-        print("cannot find tweak")
-        #if tweak node doesn't exist, snaps vertex to position and deletes history
-        source_vtx = cmds.ls(source_mesh + '.vtx[*]', fl=True)
-        target_vtx = cmds.ls(target_mesh + '.vtx[*]', fl=True)
-        for vtx in range(0, len(source_vtx)):
-            pointP =  cmds.pointPosition(source_mesh + ".vtx[" + str(vtx) + "]")
-            cmds.select(target_mesh + ".vtx[" + str(vtx) + "]")
-            cmds.move(pointP[0], pointP[1], pointP[2])
-        cmds.delete(target_mesh, constructionHistory = True)
+    #bake transform node
+    try:
+        pm.bakePartialHistory(ppt = True)
+    except:
+        pm.warning("unable to bake partial history")
+        pass
 
 
 def getVtxPos(shapeNode, original) :
@@ -182,7 +166,7 @@ def batch_run():
                 ["tgt_f_tal_nrw_body_lod0_meshShape", "f_tal_nrw_body_lod0_meshShape"]            
                 ]"""
     print ("step 1")
-    delt_pairs_list = [["pCubeShape1", "pCubeShape2"]]
+    delt_pairs_list = [["pCubeShape2", "pCubeShape1"]]
     print ("step 2")
     for pairs in delt_pairs_list:
         print (pairs)
@@ -205,12 +189,17 @@ def clean_targets(orig = None):
     for i in target_dupes:
         #finds original
         orig = i.split("dupe")[1]
+        if "Orig" in orig:
+            orig = orig.split("Orig")[0]
+        print ("original is ", orig)
+        pm.skinCluster(orig, ub = True, e = True)
         #gets skincluster
         hist = pm.listHistory(i, pdo=True)
         skins = pm.ls(hist, type="skinCluster")
         #rebinds skin
         if skins:
             skins_cluster = skins[0]
+        
         jts = skinning.select_bound_joints(node = skins_cluster)
         pm.select(jts)
         joints = pm.ls(selection = True)
