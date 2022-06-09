@@ -166,6 +166,7 @@ def batch_run():
                 ["tgt_f_tal_nrw_body_lod0_meshShape", "f_tal_nrw_body_lod0_meshShape"]            
                 ]"""
     print ("step 1")
+    #test case, to be commented and left for further testing and edits 
     delt_pairs_list = [["pCubeShape2", "pCubeShape1"]]
     print ("step 2")
     for pairs in delt_pairs_list:
