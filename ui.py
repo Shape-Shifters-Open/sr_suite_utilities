@@ -189,9 +189,9 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.controls_tab = QtWidgets.QWidget()
         self.tools_tab.addTab(self.controls_tab, "Controls")
         self.h_swap_control_btn = QtWidgets.QPushButton(self.controls_tab)
-        self.h_swap_control_btn.setText("Swap Shape")
+        self.h_swap_control_btn.setText("Swap Shape" )
         # self.h_swap_control_btn.resize(370, 20)
-
+ 
         self.shape_options = QtWidgets.QComboBox(self.controls_tab)
         self.shape_options.move(10, 81)
         self.shape_options.resize(200, 30)
@@ -287,7 +287,7 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         # self.new_geo_txtbox.setText("Input Old Geo")
         # self.new_geo_txtbox.move(10, 42)
         # self.get_old_geo = QtWidgets.QLineEdit(self.deform_tab)
-        # self.get_old_geo.move(150, 42)
+        # self.get_old_geo.move(150, 42) c  
         # self.get_old_geo.resize(210, 20)
 
         # self.tweak_node = QtWidgets.QLabel(self.deform_tab)
@@ -297,14 +297,29 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         # self.get_tweak_node.move(150, 63)
         # self.get_tweak_node.resize(210, 20)
 
+        self.h_apply_target_prefix = QtWidgets.QPushButton(self.deform_tab)
+        self.h_apply_target_prefix.setText("Set Targets")
+        self.h_apply_target_prefix.setToolTip("Please select all targets and run")
+
+        self.h_apply_source_prefix = QtWidgets.QPushButton(self.deform_tab)   
+        self.h_apply_source_prefix.setText("Set Source")
+        self.h_apply_source_prefix.setToolTip("Please select all sources and run")
+
         self.h_save_skins = QtWidgets.QPushButton(self.deform_tab)
-        self.h_save_skins.setText("Save Target Skins")
+        self.h_save_skins.setText("Save Target Skins")    
+        self.h_save_skins.setToolTip("select all target skins")
+
 
         self.h_bake_deltas = QtWidgets.QPushButton(self.deform_tab)
         self.h_bake_deltas.setText("Bake Deltas")
+        self.h_bake_deltas.setToolTip("select source and target")
 
         self.h_clean_targets = QtWidgets.QPushButton(self.deform_tab)
         self.h_clean_targets.setText("Clean Targets")
+        self.h_clean_targets.setToolTip("no selection required, clears scene")
+
+        
+        
 
 
         return
@@ -316,7 +331,7 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         skeleton_tab_layout.addRow(self.jfc_btn)
         skeleton_tab_layout.addRow(self.dumb_copy_orient_btn)
         skeleton_tab_layout.addRow(self.smart_copy_orient_btn)
-
+   
         # Create the skinning tab layout:
         skin_tab_layout = QtWidgets.QFormLayout(self.skin_tab)
         skin_tab_layout.addRow(self.harden_btn)
@@ -346,6 +361,8 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
 
         # Create the deform tab layout:
         deform_tab_layout = QtWidgets.QFormLayout(self.deform_tab)
+        deform_tab_layout.addRow(self.h_apply_target_prefix)
+        deform_tab_layout.addRow(self.h_apply_source_prefix)
         deform_tab_layout.addRow(self.h_save_skins)
         deform_tab_layout.addRow(self.h_bake_deltas)
         deform_tab_layout.addRow(self.h_clean_targets)
@@ -377,6 +394,9 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.h_save_skins.clicked.connect(self.ui_save_skins)
         self.h_bake_deltas.clicked.connect(self.ui_bake_deltas)
         self.h_clean_targets.clicked.connect(self.ui_clean_targets)
+        self.h_apply_target_prefix.clicked.connect(self.ui_tgt_prefix)
+        self.h_apply_source_prefix.clicked.connect(self.ui_source_prefix)
+        
 
 
         return
@@ -545,6 +565,12 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
                         self.match_by_options.currentIndex(), self.influence_options.currentIndex())
 
 
+    def ui_tgt_prefix(self):
+        deform.add_prefix(tgt = 1)
+    
+
+    def ui_source_prefix(self):
+        deform.add_prefix(tgt = 0)
 
 
 def run():

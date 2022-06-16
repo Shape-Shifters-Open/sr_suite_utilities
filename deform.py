@@ -16,6 +16,16 @@ import pymel.core as pm
 import maya.cmds as cmds
 import sys
 
+def add_prefix(tgt = 1):
+    all = pm.ls(selection = True)
+    if tgt == 1:
+        pref = "tgt_deltas_"
+    else:
+        pref = "source_deltas_"
+    
+    for i in all:
+        name = pref + i
+        pm.rename(i, name)
 
 def deltas_to_tweak(new_geo, old_geo, tweak):
     '''
@@ -49,15 +59,19 @@ def save_skins_unbind():
     runs based on selection
     """  
     #takes selection
-    old_geo = pm.ls(selection = True)
+    old_geo = pm.ls("*tgt_deltas_*")
 
     #duplicates selection, saves skincluster and ubinds original skin
     dup_geo = []
     dup_grp = pm.group(em = True)
     ex_joint = pm.joint(n = "temp_jnt", p = (0, 0, 0))
     for i in old_geo:
-        dup = pm.duplicate(i, n = "dupe" + i)
+        if "Shape" in str(i):
+            continue
+        name = i.split("tgt_deltas_")[1]
+        dup = pm.duplicate(i, n = "dupe" + name)
         hist = pm.listHistory(i, pdo=True)
+        #print("hist", hist)
         skins = pm.ls(hist, type="skinCluster")[0]
         jts = skinning.select_bound_joints(node = skins)
         pm.select(jts)
@@ -76,43 +90,57 @@ def bake_deltas(source_mesh = None, target_mesh = None):
     bakes deltas based on selection
     select target mesh first, and then source mesh
     """
-    meshes = pm.ls(selection = True)  
-    target_mesh = meshes[0]
-    source_mesh = meshes[1]
+    
+    target_mesh = pm.ls("*tgt_deltas_*")
+    source_mesh = pm.ls("*source_deltas_*")
     
     #nodes = pm.listHistory(target_mesh, pruneDagObjects = True, interestLevel = 1)
     #tweak_node = None
-    
-    pm.select(target_mesh, r = True)
-    pm.select(source_mesh  , add = True)
+    for tgt in target_mesh:
+        if "Shape" in str(tgt):
+            
+            continue
+        print ("baking ", tgt)
+        name = tgt.split("tgt_deltas_")[1]
+        source = None
+        for i in source_mesh:
+            if "Orig" in str(i):
+                
+                continue
+            if name in str(i):
+                print("to ", i)
+                source = i
+        if source:
+            pm.select(tgt, r = True)
+            pm.select(source  , add = True)
 
-    try:
-        batch_run()
-        print("running batch run")
-    except:
-        pm.warning("unable to batch run bake deltas script")
-        pass
-    
-    # try:
-    #     pm.lockNode(source_mesh, l=False, lockUnpublished=False)
-    # except:
-    #     pass 
-    #adds transform node 
+            try:
+                batch_run(source, tgt)
+                print("running batch run")
+            except:
+                pm.warning("unable to batch run bake deltas script")
+                pass
+        
+            # try:
+            #     pm.lockNode(source_mesh, l=False, lockUnpublished=False)
+            # except:
+            #     pass 
+            #adds transform node 
 
-    try:
-        pm.polyMoveVertex(source_mesh, constructionHistory = 1, random = 0)
-    except:
-        pm.warning("unable to add transform node, please check if locked")
-        pass
+            try:
+                pm.polyMoveVertex(source, constructionHistory = 1, random = 0)
+            except:
+                pm.warning("unable to add transform node, please check if locked")
+                pass
 
-    pm.select(source_mesh)
+            pm.select(source)
 
-    #bake transform node
-    try:
-        pm.bakePartialHistory(ppt = True)
-    except:
-        pm.warning("unable to bake partial history")
-        pass
+            #bake transform node
+            try:
+                pm.bakePartialHistory(ppt = True)
+            except:
+                pm.warning("unable to bake partial history")
+                pass
 
 
 def getVtxPos(shapeNode, original) :
@@ -152,7 +180,7 @@ def applyDeltaToTweak (shapeNode , original):
         index+=1
 
 
-def batch_run():
+def batch_run(source, target):
     print("batch run function running")
     """delt_pairs_list= [["tgt_head_lod0_meshShape", "head_lod0_meshShape"],
                 ["tgt_teeth_lod0_meshShape", "teeth_lod0_meshShape"],
@@ -167,7 +195,7 @@ def batch_run():
                 ]"""
     print ("step 1")
     #test case, to be commented and left for further testing and edits 
-    delt_pairs_list = [["pCubeShape2", "pCubeShape1"]]
+    delt_pairs_list = [[source, target]]
     print ("step 2")
     for pairs in delt_pairs_list:
         print (pairs)
@@ -186,6 +214,19 @@ def clean_targets(orig = None):
     #finds duplicates based on prefix
     target_dupes = pm.ls("dupe*")
     par = pm.listRelatives(target_dupes[0], parent = True)[0]
+    tgts = pm.ls("*tgt_deltas_*")
+    sources = pm.ls("*source_deltas_*")
+    for i in tgts:
+        if "Shape" in str(i):
+            continue
+        name = i.split("tgt_deltas_")[1]
+        pm.rename(i, name)
+
+    for i in sources:
+        if "Shape" in str(i):
+            continue
+        name = i.split("source_deltas_")[1]
+        pm.rename(i, name)
 
     for i in target_dupes:
         #finds original
@@ -222,6 +263,7 @@ def clean_targets(orig = None):
             pm.warning("rip skin not working")
             pass
             
+        print("scene cleaned up")
         
     pm.delete(par)
 
