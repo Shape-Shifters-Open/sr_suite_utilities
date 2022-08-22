@@ -24,6 +24,7 @@ from . import dict_lib
 from . import all_control_options
 from . import orientation
 from . import deform
+from . import blendshapes
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
 
@@ -291,9 +292,23 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.h_deform_btn.move(10, 84)
         self.h_deform_btn.resize(360, 20)
 
+        # Blendshapes tab
+        self.blendshapes_tab = QtWidgets.QWidget()
+        self.tools_tab.addTab(self.blendshapes_tab, "Blendshapes")
+
+        self.smooth_iter_label = QtWidgets.QLabel(self.blendshapes_tab)
+        self.smooth_iter_label.setText("Smooth iterations")
+        self.smooth_iter_int = QtWidgets.QSpinBox(self.blendshapes_tab)
+
+        self.h_split_targets_btn = QtWidgets.QPushButton(self.blendshapes_tab)
+        self.h_split_targets_btn.setText("Import maps")
+        self.h_split_targets_btn.setToolTip("select mesh and run, then select maps")
+
+        self.h_prep_scene_btn = QtWidgets.QPushButton(self.blendshapes_tab)
+        self.h_prep_scene_btn.setText("Prep Scene")
+        self.h_prep_scene_btn.setToolTip("run to remove duplicates and add target meshes")
 
         return
-
 
     def create_layouts(self):
         # Create the skeleton tab layout:
@@ -329,6 +344,14 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         # Create Transforms Tab layout:
         transforms_tab_layout = QtWidgets.QFormLayout(self.transforms_tab)
 
+        # Create Blendshapes Tab layout:
+        blendshapes_tab_layout = QtWidgets.QFormLayout(self.blendshapes_tab)
+        blendshapes_tab_layout.addRow(self.smooth_iter_label)
+        blendshapes_tab_layout.addRow(self.smooth_iter_int)
+        blendshapes_tab_layout.addRow(self.h_split_targets_btn)
+        blendshapes_tab_layout.addRow(self.h_prep_scene_btn)
+        
+
         return
 
 
@@ -351,8 +374,12 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         self.dumb_copy_orient_btn.clicked.connect(self.ui_dumb_copy_orient)
         self.smart_copy_orient_btn.clicked.connect(self.ui_smart_copy_orient)
         self.rip_skin_btn.clicked.connect(self.ui_rip_skin_btn)
-        self.h_deform_btn.clicked.connect(self.ui_bake_deltas)
+        #self.h_deform_btn.clicked.connect(self.ui_bake_deltas)
+        self.h_split_targets_btn.clicked.connect(self.ui_bs_splitter)
+        self.h_prep_scene_btn.clicked.connect(self.ui_prep_scene)
 
+        
+        
         return
 
 
@@ -505,6 +532,11 @@ class MainDialog(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
         skinning.rip_skin(self.ui_rip_skin_attrs()[0], self.ui_rip_skin_attrs()[1], 
                         self.match_by_options.currentIndex(), self.influence_options.currentIndex())
 
+    def ui_bs_splitter(self):
+        blendshapes.get_files(smooth_iter = self.smooth_iter_int.value())
+    
+    def ui_prep_scene(self):
+        blendshapes.prep_scene()
 
 def run():
     """displays windows"""
